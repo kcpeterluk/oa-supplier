@@ -1,11 +1,17 @@
 ﻿@page "/suppliers"
 @using OA.Supplier.Domain.Suppliers
-@attribute [StreamRendering]
+@rendermode InteractiveServer
 @inject ISupplierRepository SupplierRepository
+@inject NavigationManager NavigationManager
 
 <PageTitle>Supplier</PageTitle>
 
-<h1>Supplier</h1>
+<div class="d-flex gap-3">   
+    <h1>Supplier</h1>
+    <button class="btn btn-outline-primary" @onclick="AddItem">
+        Add
+    </button>
+</div>
 
 @if (_suppliers is null)
 {
@@ -39,12 +45,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
-        
         IEnumerable<Supplier> suppliers = await SupplierRepository.GetAllAsync();
         IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(MapFrom);
         _suppliers = suppliersViewModel.ToArray();
+    }
+    
+    private void AddItem()
+    {
+        NavigationManager.NavigateTo("/suppliers/create");
     }
     
     private static SupplierViewModel MapFrom(Supplier supplier) => new()

@@ -1,0 +1,61 @@
+﻿@page "/suppliers/create"
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<PageTitle>Supplier</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Supplier</h1>
+    <button class="btn btn-outline-secondary" @onclick="NavigateBack" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</div>
+
+<EditForm Model="_supplier" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <InputText class="form-control" @bind-Value="_supplier.Name" />
+        <ValidationMessage For="@(() => _supplier.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <InputText class="form-control" @bind-Value="_supplier.Address" />
+        <ValidationMessage For="@(() => _supplier.Address)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+
+@code {
+    private SupplierViewModel _supplier = new()
+    {
+        Name = string.Empty,
+        Address = string.Empty
+    };
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/suppliers");
+    }
+
+    private void HandleSubmit()
+    {
+        // Save to database / API here
+    }
+
+    private record SupplierViewModel
+    {
+        [Required]
+        [StringLength(450)]
+        public required string Name { get; set; }
+
+        [Required]
+        [StringLength(450)]
+        public required string Address { get; set; }
+    }
+}
