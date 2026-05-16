@@ -1,6 +1,6 @@
 namespace OA.Supplier.Domain.Suppliers;
 
-public class Supplier : AssignedEntity
+public class Supplier : AggregateRoot
 { 
   public Supplier(string name, string address)
   {

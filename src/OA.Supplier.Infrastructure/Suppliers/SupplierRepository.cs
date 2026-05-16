@@ -15,23 +15,23 @@ internal class SupplierRepository : ISupplierRepository
     {
       new("Supplier 1", "Address 1")
       {
-        CreatedByUser = "User 1",
+        CreatedByUser = "Test User"
       },
       new("Supplier 2", "Address 2")
       {
-        CreatedByUser = "User 2",
+        CreatedByUser = "Test User"
       },
       new("Supplier 3", "Address 3")
       {
-        CreatedByUser = "User 3",
+        CreatedByUser = "Test User"
       },
       new ("Supplier 4", "Address 4")
       {
-        CreatedByUser = "User 4",
+        CreatedByUser = "Test User"
       },
       new ("Supplier 5", "Address 5")
       {
-        CreatedByUser = "User 5",
+        CreatedByUser = "Test User"
       }
     };
     return Task.FromResult(ouput);

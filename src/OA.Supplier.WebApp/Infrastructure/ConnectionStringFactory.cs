@@ -1,0 +1,27 @@
+using Microsoft.Data.SqlClient;
+using OA.Supplier.Infrastructure;
+
+namespace OA.Supplier.WebApp.Infrastructure;
+
+public class ConnectionStringFactory : IConnectionStringFactory
+{
+  private readonly string _connectionString;
+  
+  public ConnectionStringFactory(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
+  {
+    SqlConnectionStringBuilder sqlConnectionStringBuilder = new(configuration.GetConnectionString("SupplierDbContext"))
+    {
+      TrustServerCertificate = true
+    };
+    
+    if (webHostEnvironment.IsDevelopment())
+    {
+      sqlConnectionStringBuilder.UserID = Environment.GetEnvironmentVariable("MSSQL_SA_ID");
+      sqlConnectionStringBuilder.Password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
+    }
+    
+    _connectionString = sqlConnectionStringBuilder.ConnectionString;
+  }
+  
+  public string GetConnectionString() => _connectionString;
+}

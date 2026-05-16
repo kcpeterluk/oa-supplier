@@ -16,7 +16,9 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7177;http://localhost:5215",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MSSQL_SA_ID": "sa",
+        "MSSQL_SA_PASSWORD": "v1sp15Lx@b=Eqe2unaml"
       }
     }
   }

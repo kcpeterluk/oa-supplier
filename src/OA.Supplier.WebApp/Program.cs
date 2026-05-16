@@ -1,6 +1,7 @@
 using OA.Supplier.Infrastructure;
 using OA.Supplier.WebApp.Apis.Suppliers;
 using OA.Supplier.WebApp.Components;
+using OA.Supplier.WebApp.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,8 @@ builder.Services.AddRazorComponents()
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddInfrastructure();
+builder.Services.AddSingleton<IConnectionStringFactory, ConnectionStringFactory>();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 WebApplication app = builder.Build();
 
