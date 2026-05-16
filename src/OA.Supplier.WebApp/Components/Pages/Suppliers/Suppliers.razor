@@ -1,0 +1,63 @@
+﻿@page "/suppliers"
+@using OA.Supplier.Domain.Suppliers
+@attribute [StreamRendering]
+@inject ISupplierRepository SupplierRepository
+
+<PageTitle>Supplier</PageTitle>
+
+<h1>Supplier</h1>
+
+@if (_suppliers is null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th aria-label="Supplier Name">Name</th>
+            <th aria-label="Supplier Address">Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (SupplierViewModel supplier in _suppliers)
+        {
+            <tr>
+                <td>@supplier.Name</td>
+                <td>@supplier.Address</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private SupplierViewModel[]? _suppliers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate asynchronous loading to demonstrate streaming rendering
+        await Task.Delay(500);
+        
+        IEnumerable<Supplier> suppliers = await SupplierRepository.GetAllAsync();
+        IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(MapFrom);
+        _suppliers = suppliersViewModel.ToArray();
+    }
+    
+    private static SupplierViewModel MapFrom(Supplier supplier) => new()
+    {
+        Id = supplier.Id.ToString(),
+        Name = supplier.Name,
+        Address = supplier.Address
+    };
+    
+    private record SupplierViewModel
+    {
+        public required string Id { get; init; }
+        public required string Name { get; init; }
+        public required string Address { get; init; }
+    }
+}

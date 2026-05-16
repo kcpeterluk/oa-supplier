@@ -1,3 +1,4 @@
+using OA.Supplier.Infrastructure;
 using OA.Supplier.WebApp.Apis.Suppliers;
 using OA.Supplier.WebApp.Components;
 
@@ -10,6 +11,8 @@ builder.Services.AddRazorComponents()
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddInfrastructure();
 
 WebApplication app = builder.Build();
 
