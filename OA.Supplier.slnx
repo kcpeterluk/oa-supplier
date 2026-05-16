@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/OA.Supplier.WebApi/OA.Supplier.WebApi.csproj" />
+    <Project Path="src\OA.Supplier.WebApp\OA.Supplier.WebApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OA.Supplier.ComponentTests/OA.Supplier.ComponentTests.csproj" />

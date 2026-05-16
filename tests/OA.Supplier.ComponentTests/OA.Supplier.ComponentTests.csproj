@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\OA.Supplier.WebApi\OA.Supplier.WebApi.csproj" />
+    <ProjectReference Include="..\..\src\OA.Supplier.WebApp\OA.Supplier.WebApp.csproj" />
   </ItemGroup>
 
 </Project>

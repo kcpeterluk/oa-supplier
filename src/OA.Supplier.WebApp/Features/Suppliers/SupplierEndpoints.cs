@@ -1,4 +1,4 @@
-namespace OA.Supplier.WebApi.Features.Suppliers;
+namespace OA.Supplier.WebApp.Features.Suppliers;
 
 public static class SupplierEndpoints
 {
