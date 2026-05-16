@@ -11,8 +11,4 @@
     <Folder Include="SupplierRates\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Ulid" Version="1.4.1" />
-  </ItemGroup>
-
 </Project>
