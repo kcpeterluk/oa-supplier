@@ -7,7 +7,7 @@ public class SuppliersTests : WebApplicationTestBase
   [Test]
   public async Task Get_ReturnsSuccess_WithSampleData()
   {
-    using HttpResponseMessage response = await HttpClient.GetAsync("/suppliers");
+    using HttpResponseMessage response = await HttpClient.GetAsync("/api/suppliers");
 
     await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
   }

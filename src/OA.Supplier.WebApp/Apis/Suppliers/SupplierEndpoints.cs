@@ -1,11 +1,11 @@
-namespace OA.Supplier.WebApp.Features.Suppliers;
+namespace OA.Supplier.WebApp.Apis.Suppliers;
 
 public static class SupplierEndpoints
 {
   public static RouteGroupBuilder MapSupplierEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
   {
     RouteGroupBuilder group = endpointRouteBuilder
-      .MapGroup("/suppliers")
+      .MapGroup("/api/suppliers")
       .WithTags("Suppliers");
     
     group.MapGet("", () =>
