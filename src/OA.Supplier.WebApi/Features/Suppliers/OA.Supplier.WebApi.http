@@ -1,6 +1,6 @@
 @OA.Supplier.WebApi_HostAddress = http://localhost:5215
 
-GET {{OA.Supplier.WebApi_HostAddress}}/weatherforecast/
+GET {{OA.Supplier.WebApi_HostAddress}}/suppliers/
 Accept: application/json
 
 ###
