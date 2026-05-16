@@ -4,7 +4,7 @@ public static class SupplierEndpoints
 {
   public static RouteGroupBuilder MapSupplierEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
   {
-    var summaries = new[]
+    string[] summaries = new[]
     {
       "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
@@ -15,7 +15,7 @@ public static class SupplierEndpoints
     
     group.MapGet("", () =>
       {
-        var forecast =  Enumerable.Range(1, 5).Select(index =>
+        WeatherForecast[] forecast =  Enumerable.Range(1, 5).Select(index =>
             new WeatherForecast
             (
               DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
