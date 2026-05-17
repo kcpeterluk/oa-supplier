@@ -24,8 +24,16 @@ internal class SupplierRepository(SupplierDbContext supplierDbContext) : ISuppli
     return result > 0;
   }
 
-  public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+  public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
   {
-    throw new NotImplementedException();
+    Domain.Suppliers.Supplier? supplier = await GetByIdAsync(id, cancellationToken);
+    if (supplier is null)
+    {
+      return false;
+    }
+
+    supplierDbContext.Supplier.Remove(supplier);
+    await supplierDbContext.SaveChangesAsync(cancellationToken);
+    return true;
   }
 }

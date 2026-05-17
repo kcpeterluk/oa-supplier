@@ -1,12 +1,14 @@
 ﻿@page "/suppliers"
 
 @using Microsoft.AspNetCore.Authorization
+@using OA.Supplier.Application.Suppliers
 @using OA.Supplier.Domain.Suppliers
 
 @rendermode InteractiveServer
 
-@inject ISupplierRepository SupplierRepository
 @inject NavigationManager NavigationManager
+@inject ISupplierRepository SupplierRepository
+@inject DeleteSupplier.ICommandHandler DeleteSupplierCommandHandler
 
 @attribute [Authorize]
 
@@ -40,9 +42,14 @@ else
         {
             <tr>
                 <td>
-                    <button class="btn btn-primary" @onclick="() => EditItem(supplier.Id)">
-                        Edit
-                    </button>
+                    <div class="d-flex gap-3">   
+                        <button class="btn btn-primary" @onclick="() => EditItem(supplier.Id)">
+                            Edit
+                        </button>
+                        <button class="btn btn-danger" @onclick="() => DeleteItem(supplier.Id)">
+                            Delete
+                        </button>
+                    </div>
                 </td>
                 <td>@supplier.Name</td>
                 <td>@supplier.Address</td>
@@ -57,11 +64,16 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSuppliers();
+    }
+
+    private async Task LoadSuppliers()
+    {
         IEnumerable<Supplier> suppliers = await SupplierRepository.GetAllAsync();
         IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(SupplierViewModel.MapFrom);
         _suppliers = suppliersViewModel.ToArray();
     }
-    
+
     private void AddItem()
     {
         NavigationManager.NavigateTo("/suppliers/create");
@@ -70,6 +82,14 @@ else
     private void EditItem(int id)
     {
         NavigationManager.NavigateTo($"/suppliers/{id}/edit");
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        bool result = await DeleteSupplierCommandHandler.HandleAsync(new DeleteSupplier.DeleteSupplierRequest(id));
+        
+        if (result)
+            await LoadSuppliers();
     }
     
     private record SupplierViewModel(int Id, string Name, string Address)

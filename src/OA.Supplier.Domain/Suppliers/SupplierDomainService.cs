@@ -7,6 +7,8 @@ public interface ISupplierDomainService
   Task<Supplier> CreateSupplier(CreateSupplierRequest request, CancellationToken cancellationToken = default);
   
   Task<bool> UpdateSupplier(UpdateSupplierRequest request, CancellationToken cancellationToken = default);
+  
+  Task<bool> DeleteSupplier(int id, CancellationToken cancellationToken = default);
 }
 
 public class SupplierDomainService(ISupplierRepository supplierRepository, ILogger<SupplierDomainService> logger) : ISupplierDomainService
@@ -41,4 +43,7 @@ public class SupplierDomainService(ISupplierRepository supplierRepository, ILogg
 
     return await supplierRepository.UpdateAsync(supplier, cancellationToken);
   }
+
+  public Task<bool> DeleteSupplier(int id, CancellationToken cancellationToken = default) => 
+    supplierRepository.DeleteAsync(id, cancellationToken);
 }

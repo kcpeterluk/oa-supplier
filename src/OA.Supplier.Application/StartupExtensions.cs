@@ -15,6 +15,10 @@ public static class StartupExtensions
     services.AddScoped<UpdateSupplier.ICommandHandler, UpdateSupplier.CommandHandler>();
     services.AddScoped<IValidator<UpdateSupplierRequest>, UpdateSupplierRequestValidator>();
     
+    services.AddScoped<DeleteSupplier.ICommandHandler, DeleteSupplier.CommandHandler>();
+    services.AddScoped<IValidator<DeleteSupplier.DeleteSupplierRequest>, DeleteSupplierRequestValidator>();
+    
+    
     return services;
   }
 }
