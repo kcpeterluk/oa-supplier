@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using OA.Supplier.Application.SupplierRates;
 using OA.Supplier.Application.Suppliers;
-using OA.Supplier.Domain;
 using OA.Supplier.Domain.SupplierRates;
 using OA.Supplier.Domain.Suppliers;
 
@@ -17,25 +16,25 @@ public class GetSupplierRatesTests : WebApplicationTestBase
 
     using IServiceScope scope = CreateServiceScope();
     CreateSupplier.ICommandHandler createSupplierCommandHandler = scope.ServiceProvider.GetRequiredService<CreateSupplier.ICommandHandler>();
-    IRepository<SupplierRate> supplierRateRepository = scope.ServiceProvider.GetRequiredService<IRepository<SupplierRate>>();
+    CreateSupplierRate.ICommandHandler createSupplierRateCommandHandler = scope.ServiceProvider.GetRequiredService<CreateSupplierRate.ICommandHandler>();
     GetSupplierRatesQueryHandler.IQueryHandler getSupplierRatesQueryHandler = scope.ServiceProvider.GetRequiredService<GetSupplierRatesQueryHandler.IQueryHandler>();
 
     SupplierDto supplier = await createSupplierCommandHandler.HandleAsync(supplierRequest);
     SupplierDto otherSupplier = await createSupplierCommandHandler.HandleAsync(otherSupplierRequest);
 
-    SupplierRate firstSupplierRate = await supplierRateRepository.AddAsync(SupplierRate.Create(
+    SupplierRateDto firstSupplierRate = await createSupplierRateCommandHandler.HandleAsync(new CreateSupplierRateRequest(
       supplier.Id,
       100.00m,
       new DateOnly(2026, 1, 1),
       new DateOnly(2026, 1, 31),
       "Test User"));
-    SupplierRate secondSupplierRate = await supplierRateRepository.AddAsync(SupplierRate.Create(
+    SupplierRateDto secondSupplierRate = await createSupplierRateCommandHandler.HandleAsync(new CreateSupplierRateRequest(
       supplier.Id,
       125.50m,
       new DateOnly(2026, 2, 1),
       new DateOnly(2026, 2, 28),
       "Test User"));
-    await supplierRateRepository.AddAsync(SupplierRate.Create(
+    await createSupplierRateCommandHandler.HandleAsync(new CreateSupplierRateRequest(
       otherSupplier.Id,
       200.00m,
       new DateOnly(2026, 3, 1),

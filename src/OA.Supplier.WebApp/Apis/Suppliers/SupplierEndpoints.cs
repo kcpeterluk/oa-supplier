@@ -32,5 +32,5 @@ record SupplierModel(
   string Address,
   Decimal Rate,
   DateOnly RateStartDate,
-  DateOnly RateEndDate
+  DateOnly? RateEndDate
 );

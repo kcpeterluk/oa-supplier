@@ -19,8 +19,7 @@ internal class SupplierRateEntityTypeConfiguration : IEntityTypeConfiguration<Su
     builder.Property(x => x.RateStartDate)
       .IsRequired();
     
-    builder.Property(x => x.RateEndDate)
-      .IsRequired();
+    builder.Property(x => x.RateEndDate);
     
     builder.Property(x => x.CreatedByUser)
       .IsRequired()
