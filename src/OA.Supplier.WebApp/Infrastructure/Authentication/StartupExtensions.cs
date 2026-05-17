@@ -4,7 +4,7 @@ using OA.Supplier.WebApp.Components.Account;
 using OA.Supplier.WebApp.Data.Identity;
 using OA.Supplier.WebApp.Infrastructure.Persistence;
 
-namespace OA.Supplier.WebApp;
+namespace OA.Supplier.WebApp.Infrastructure.Authentication;
 
 public static class StartupExtensions
 {
@@ -19,8 +19,10 @@ public static class StartupExtensions
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
       })
+      .AddBearerToken(Constants.IdentityBearerScheme)
       .AddIdentityCookies();
 
+    services.AddAuthorization();
     services.AddDbContext<ApplicationIdentityDbContext>();
     services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -30,6 +32,7 @@ public static class StartupExtensions
         options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
       })
       .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+      .AddApiEndpoints()
       .AddSignInManager()
       .AddDefaultTokenProviders();
 

@@ -11,6 +11,14 @@ namespace OA.Supplier.ComponentTests.Features.Suppliers;
 public class SuppliersEndpointTests : WebApplicationTestBase
 {
   [Test]
+  public async Task Get_AllSuppliers_WhenUnauthenticated_ReturnsUnauthorized()
+  {
+    using HttpResponseMessage response = await HttpClient.GetAsync("/api/suppliers");
+
+    await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+  }
+
+  [Test]
   public async Task Get_AllSuppliers_ReturnsSuppliersWithRates()
   {
     DateTime expectedCreatedOn = DateTime.UtcNow;
@@ -36,6 +44,7 @@ public class SuppliersEndpointTests : WebApplicationTestBase
       null,
       "Test User"));
 
+    await AuthenticateHttpClientAsync();
     using HttpResponseMessage response = await HttpClient.GetAsync("/api/suppliers");
     SupplierApiResponse? apiResponse = await response.Content.ReadFromJsonAsync<SupplierApiResponse>();
 

@@ -1,6 +1,20 @@
-@OA.Supplier.WebApi_HostAddress = http://localhost:5215
+# @env local
+
+@AccessToken = {{login.response.body.$.accessToken}}
+
+# @name login
+POST {{OA.Supplier.WebApi_HostAddress}}/api/account/login?useCookies=false
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+###
 
 GET {{OA.Supplier.WebApi_HostAddress}}/api/suppliers/
 Accept: application/json
+Authorization: Bearer {{AccessToken}}
 
 ###

@@ -1,5 +1,6 @@
 using OA.Supplier.Application.Suppliers;
 using OA.Supplier.WebApp.Apis;
+using OA.Supplier.WebApp.Infrastructure.Authentication;
 
 namespace OA.Supplier.WebApp.Apis.Suppliers;
 
@@ -9,7 +10,10 @@ public static class SupplierEndpoints
   {
     RouteGroupBuilder group = endpointRouteBuilder
       .MapGroup("/api/suppliers")
-      .WithTags("Suppliers");
+      .WithTags("Suppliers")
+      .RequireAuthorization(policy => policy
+        .AddAuthenticationSchemes(Constants.IdentityBearerScheme)
+        .RequireAuthenticatedUser());
     
     group.MapGet("", async (
         GetSuppliersWithRatesQueryHandler.IQueryHandler queryHandler,

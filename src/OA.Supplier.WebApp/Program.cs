@@ -9,6 +9,7 @@ using OA.Supplier.WebApp.Apis.Suppliers;
 using OA.Supplier.WebApp.Components;
 using OA.Supplier.WebApp.Components.Account;
 using OA.Supplier.WebApp.Data.Identity;
+using OA.Supplier.WebApp.Infrastructure.Authentication;
 using OA.Supplier.WebApp.Infrastructure.Persistence;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,8 @@ if (app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
@@ -57,6 +60,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+app.MapGroup("/api/account").MapIdentityApi<ApplicationUser>();
 
 app.MapSupplierEndpoints();
 
