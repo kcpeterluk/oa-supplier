@@ -1,7 +1,12 @@
 ﻿@page "/"
-@using OA.Supplier.Infrastructure
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Infrastructure
+@using Microsoft.EntityFrameworkCore.Storage
+@using OA.Supplier.Infrastructure.Persistence
+@using OA.Supplier.WebApp.Infrastructure.Persistence
 @rendermode InteractiveServer
-@inject SupplierDbContext DbContext
+@inject SupplierDbContext SupplierDbContext
+@inject ApplicationIdentityDbContext ApplicationIdentityDbContext
 
 <PageTitle>Home</PageTitle>
 
@@ -21,14 +26,23 @@ Welcome to your new app.
     
     private async Task InitialiseDatabase()
     {
-        await DbContext.Database.EnsureDeletedAsync();
-        await DbContext.Database.EnsureCreatedAsync();
+        _databaseActionStatus = "Initialising database...";
+        
+        await SupplierDbContext.Database.EnsureDeletedAsync();
+        await SupplierDbContext.Database.EnsureCreatedAsync();
+        
+        IRelationalDatabaseCreator applicationIdentityDbCreator = ApplicationIdentityDbContext.Database.GetService<IRelationalDatabaseCreator>();
+        await applicationIdentityDbCreator.CreateTablesAsync();
+        
         _databaseActionStatus = "Database initialised successfully.";
     }
     
     private async Task DropDatabase()
     {
-        await DbContext.Database.EnsureDeletedAsync();
+        _databaseActionStatus = "Dropping database...";
+        
+        await SupplierDbContext.Database.EnsureDeletedAsync();
+        
         _databaseActionStatus = "Database dropped successfully.";
     }
 }

@@ -209,3 +209,4 @@ FakesAssemblies/
 # JetBrains Rider
 *.sln.iml
 .idea/.idea.OA.Supplier/.idea/dataSources.xml
+src/OA.Supplier.WebApp/Properties/launchSettings.json

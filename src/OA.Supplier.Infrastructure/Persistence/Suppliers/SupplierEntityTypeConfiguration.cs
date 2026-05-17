@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace OA.Supplier.Infrastructure.Suppliers;
+namespace OA.Supplier.Infrastructure.Persistence.Suppliers;
 
 internal class SupplierEntityTypeConfiguration : IEntityTypeConfiguration<Domain.Suppliers.Supplier>
 {

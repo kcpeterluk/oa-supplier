@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OA.Supplier.Domain.Suppliers;
-using OA.Supplier.Infrastructure.Suppliers;
+using OA.Supplier.Infrastructure.Persistence;
+using OA.Supplier.Infrastructure.Persistence.Suppliers;
 
 namespace OA.Supplier.Infrastructure;
 

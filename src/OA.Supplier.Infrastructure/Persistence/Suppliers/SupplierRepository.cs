@@ -1,6 +1,6 @@
 using OA.Supplier.Domain.Suppliers;
 
-namespace OA.Supplier.Infrastructure.Suppliers;
+namespace OA.Supplier.Infrastructure.Persistence.Suppliers;
 
 internal class SupplierRepository : ISupplierRepository
 {

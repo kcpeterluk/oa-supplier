@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
-using OA.Supplier.Infrastructure;
+using OA.Supplier.Infrastructure.Persistence;
 
-namespace OA.Supplier.WebApp.Infrastructure;
+namespace OA.Supplier.WebApp.Infrastructure.Persistence;
 
 public class ConnectionStringFactory : IConnectionStringFactory
 {

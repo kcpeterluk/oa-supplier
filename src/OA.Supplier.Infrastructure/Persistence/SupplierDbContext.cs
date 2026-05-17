@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace OA.Supplier.Infrastructure;
+namespace OA.Supplier.Infrastructure.Persistence;
 
 public class SupplierDbContext : DbContext
 {

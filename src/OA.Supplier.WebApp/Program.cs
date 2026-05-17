@@ -1,13 +1,21 @@
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
 using OA.Supplier.Infrastructure;
+using OA.Supplier.Infrastructure.Persistence;
+using OA.Supplier.WebApp;
 using OA.Supplier.WebApp.Apis.Suppliers;
 using OA.Supplier.WebApp.Components;
-using OA.Supplier.WebApp.Infrastructure;
+using OA.Supplier.WebApp.Components.Account;
+using OA.Supplier.WebApp.Data.Identity;
+using OA.Supplier.WebApp.Infrastructure.Persistence;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddAuthenticationServices();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -40,6 +48,9 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Add additional endpoints required by the Identity /Account Razor components.
+app.MapAdditionalIdentityEndpoints();
 
 app.MapSupplierEndpoints();
 
