@@ -6,7 +6,7 @@
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
-@inject ISupplierRepository SupplierRepository
+@inject GetSupplierQueryHandler.IQueryHandler GetSupplierQueryHandler
 @inject UpdateSupplier.ICommandHandler UpdateSupplierCommandHandler
 
 @attribute [Authorize]
@@ -51,7 +51,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        Supplier? supplier = await SupplierRepository.GetByIdAsync(Id);
+        SupplierDto? supplier = await GetSupplierQueryHandler.HandleAsync(Id);
         if (supplier is not null)
         {
             _supplierEditorViewModel = new SupplierEditorViewModel
