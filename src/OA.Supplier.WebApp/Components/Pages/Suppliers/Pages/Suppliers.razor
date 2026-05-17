@@ -2,12 +2,11 @@
 
 @using Microsoft.AspNetCore.Authorization
 @using OA.Supplier.Application.Suppliers
-@using OA.Supplier.Domain.Suppliers
 
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
-@inject ISupplierRepository SupplierRepository
+@inject GetSuppliersQueryHandler.IQueryHandler GetSuppliersQueryHandler
 @inject DeleteSupplier.ICommandHandler DeleteSupplierCommandHandler
 
 @attribute [Authorize]
@@ -69,7 +68,7 @@ else
 
     private async Task LoadSuppliers()
     {
-        IEnumerable<Supplier> suppliers = await SupplierRepository.GetAllAsync();
+        IEnumerable<SupplierDto> suppliers = await GetSuppliersQueryHandler.HandleAsync();
         IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(SupplierViewModel.MapFrom);
         _suppliers = suppliersViewModel.ToArray();
     }
@@ -94,7 +93,7 @@ else
     
     private record SupplierViewModel(int Id, string Name, string Address)
     {
-        public static SupplierViewModel MapFrom(Supplier supplier) => 
+        public static SupplierViewModel MapFrom(SupplierDto supplier) => 
             new(supplier.Id, supplier.Name, supplier.Address);
     }
 }

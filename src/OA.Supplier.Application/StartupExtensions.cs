@@ -11,6 +11,8 @@ public static class StartupExtensions
   {
     services.AddScoped<CreateSupplier.ICommandHandler, CreateSupplier.CommandHandler>();
     services.AddScoped<IValidator<CreateSupplierRequest>, CreateSupplierRequestValidator>();
+
+    services.AddScoped<GetSuppliersQueryHandler.IQueryHandler, GetSuppliersQueryHandler.QueryHandler>();
     
     services.AddScoped<UpdateSupplier.ICommandHandler, UpdateSupplier.CommandHandler>();
     services.AddScoped<IValidator<UpdateSupplierRequest>, UpdateSupplierRequestValidator>();

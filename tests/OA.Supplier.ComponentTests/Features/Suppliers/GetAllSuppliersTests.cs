@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using OA.Supplier.Application.Suppliers;
 using OA.Supplier.Domain.Suppliers;
-using SupplierEntity = OA.Supplier.Domain.Suppliers.Supplier;
 
 namespace OA.Supplier.ComponentTests.Features.Suppliers;
 
@@ -12,19 +12,20 @@ public class GetAllSuppliersTests : WebApplicationTestBase
     string firstSupplierName = $"Test Supplier:{Guid.CreateVersion7()}";
     string secondSupplierName = $"Test Supplier:{Guid.CreateVersion7()}";
 
-    SupplierEntity firstSupplier = SupplierEntity.Create(firstSupplierName, "123 Test Street", "Test User");
-    SupplierEntity secondSupplier = SupplierEntity.Create(secondSupplierName, "456 Test Avenue", "Test User");
+    CreateSupplierRequest firstSupplierRequest = new(firstSupplierName, "123 Test Street", "Test User");
+    CreateSupplierRequest secondSupplierRequest = new(secondSupplierName, "456 Test Avenue", "Test User");
 
     using IServiceScope scope = CreateServiceScope();
-    ISupplierRepository supplierRepository = scope.ServiceProvider.GetRequiredService<ISupplierRepository>();
+    CreateSupplier.ICommandHandler createSupplierCommandHandler = scope.ServiceProvider.GetRequiredService<CreateSupplier.ICommandHandler>();
+    GetSuppliersQueryHandler.IQueryHandler getSuppliersQueryHandler = scope.ServiceProvider.GetRequiredService<GetSuppliersQueryHandler.IQueryHandler>();
 
-    firstSupplier = await supplierRepository.AddAsync(firstSupplier);
-    secondSupplier = await supplierRepository.AddAsync(secondSupplier);
+    SupplierDto firstSupplier = await createSupplierCommandHandler.HandleAsync(firstSupplierRequest);
+    SupplierDto secondSupplier = await createSupplierCommandHandler.HandleAsync(secondSupplierRequest);
 
-    IEnumerable<SupplierEntity> suppliers = await supplierRepository.GetAllAsync();
+    IEnumerable<SupplierDto> suppliers = await getSuppliersQueryHandler.HandleAsync();
 
-    SupplierEntity? savedFirstSupplier = suppliers.SingleOrDefault(supplier => supplier.Id == firstSupplier.Id);
-    SupplierEntity? savedSecondSupplier = suppliers.SingleOrDefault(supplier => supplier.Id == secondSupplier.Id);
+    SupplierDto? savedFirstSupplier = suppliers.SingleOrDefault(supplier => supplier.Id == firstSupplier.Id);
+    SupplierDto? savedSecondSupplier = suppliers.SingleOrDefault(supplier => supplier.Id == secondSupplier.Id);
 
     await Assert.That(savedFirstSupplier).IsNotNull();
     await Assert.That(savedFirstSupplier!.Name).IsEqualTo(firstSupplierName);
