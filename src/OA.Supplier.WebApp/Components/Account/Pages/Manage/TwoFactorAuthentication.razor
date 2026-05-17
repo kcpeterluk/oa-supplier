@@ -80,7 +80,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var user = await UserManager.GetUserAsync(HttpContext.User);
+        ApplicationUser? user = await UserManager.GetUserAsync(HttpContext.User);
         if (user is null)
         {
             RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);

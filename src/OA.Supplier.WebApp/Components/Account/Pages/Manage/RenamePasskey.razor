@@ -73,7 +73,7 @@
     private async Task Rename()
     {
         passkey!.Name = Input.Name;
-        var result = await UserManager.AddOrUpdatePasskeyAsync(user!, passkey);
+        IdentityResult result = await UserManager.AddOrUpdatePasskeyAsync(user!, passkey);
         if (!result.Succeeded)
         {
             RedirectManager.RedirectToWithStatus("Account/Manage/Passkeys", "Error: The passkey could not be updated.", HttpContext);

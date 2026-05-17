@@ -18,13 +18,13 @@
 {
     <table class="table">
         <tbody>
-        @foreach (var passkey in currentPasskeys)
+        @foreach (UserPasskeyInfo passkey in currentPasskeys)
         {
             <tr>
                 <td>@(passkey.Name ?? "Unnamed passkey")</td>
                 <td>
                     @{
-                        var credentialId = Base64Url.EncodeToString(passkey.CredentialId);
+                        string credentialId = Base64Url.EncodeToString(passkey.CredentialId);
                     }
                     <form @formname="@($"update-passkey-{credentialId}")" @onsubmit="UpdatePasskey" method="post">
                         <AntiforgeryToken/>
@@ -113,14 +113,14 @@ else
             return;
         }
 
-        var attestationResult = await SignInManager.PerformPasskeyAttestationAsync(Input.CredentialJson);
+        PasskeyAttestationResult attestationResult = await SignInManager.PerformPasskeyAttestationAsync(Input.CredentialJson);
         if (!attestationResult.Succeeded)
         {
             RedirectManager.RedirectToCurrentPageWithStatus($"Error: Could not add the passkey: {attestationResult.Failure.Message}", HttpContext);
             return;
         }
 
-        var addPasskeyResult = await UserManager.AddOrUpdatePasskeyAsync(user, attestationResult.Passkey);
+        IdentityResult addPasskeyResult = await UserManager.AddOrUpdatePasskeyAsync(user, attestationResult.Passkey);
         if (!addPasskeyResult.Succeeded)
         {
             RedirectManager.RedirectToCurrentPageWithStatus("Error: The passkey could not be added to your account.", HttpContext);
@@ -128,7 +128,7 @@ else
         }
 
         // Immediately prompt the user to enter a name for the credential
-        var credentialIdBase64Url = Base64Url.EncodeToString(attestationResult.Passkey.CredentialId);
+        string credentialIdBase64Url = Base64Url.EncodeToString(attestationResult.Passkey.CredentialId);
         RedirectManager.RedirectTo($"Account/Manage/RenamePasskey/{credentialIdBase64Url}");
     }
 
@@ -167,7 +167,7 @@ else
             return;
         }
 
-        var result = await UserManager.RemovePasskeyAsync(user, credentialId);
+        IdentityResult result = await UserManager.RemovePasskeyAsync(user, credentialId);
         if (!result.Succeeded)
         {
             RedirectManager.RedirectToCurrentPageWithStatus("Error: The passkey could not be deleted.", HttpContext);
