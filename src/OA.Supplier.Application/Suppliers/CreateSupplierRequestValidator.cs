@@ -9,5 +9,6 @@ public class CreateSupplierRequestValidator : AbstractValidator<CreateSupplierRe
   {
     RuleFor(x => x.Name).NotEmpty();
     RuleFor(x => x.Address).NotEmpty();
+    RuleFor(x => x.CreatedByUser).NotEmpty();
   }
 }

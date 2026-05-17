@@ -24,7 +24,7 @@ builder.Services.AddAuthenticationServices();
 builder.Services.AddOpenApi();
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<IConnectionStringFactory, ConnectionStringFactory>();
+builder.Services.AddSingleton<IDatabaseConnectionStringFactory, DatabaseConnectionStringFactory>();
 builder.Services
     .AddApplicationServices()
     .AddDomainServices()

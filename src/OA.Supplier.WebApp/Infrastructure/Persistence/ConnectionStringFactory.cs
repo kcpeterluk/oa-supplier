@@ -3,11 +3,11 @@ using OA.Supplier.Infrastructure.Persistence;
 
 namespace OA.Supplier.WebApp.Infrastructure.Persistence;
 
-public class ConnectionStringFactory : IConnectionStringFactory
+public class DatabaseConnectionStringFactory : IDatabaseConnectionStringFactory
 {
   private readonly string _connectionString;
   
-  public ConnectionStringFactory(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
+  public DatabaseConnectionStringFactory(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
   {
     SqlConnectionStringBuilder sqlConnectionStringBuilder = new(configuration.GetConnectionString("SupplierDbContext"))
     {

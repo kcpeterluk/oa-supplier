@@ -6,9 +6,9 @@ public class SupplierDbContext : DbContext
 {
   private readonly string _connectionString;
 
-  public SupplierDbContext (IConnectionStringFactory connectionStringFactory)
+  public SupplierDbContext (IDatabaseConnectionStringFactory databaseConnectionStringFactory)
   {
-    _connectionString = connectionStringFactory.GetConnectionString();
+    _connectionString = databaseConnectionStringFactory.GetConnectionString();
   }
   
   public DbSet<Domain.Suppliers.Supplier> Supplier { get; set; }
@@ -24,9 +24,4 @@ public class SupplierDbContext : DbContext
   {
     optionsBuilder.UseSqlServer(_connectionString);
   }
-}
-
-public interface IConnectionStringFactory
-{
-  string GetConnectionString();
 }

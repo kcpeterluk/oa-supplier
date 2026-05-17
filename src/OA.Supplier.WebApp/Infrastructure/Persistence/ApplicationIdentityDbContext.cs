@@ -9,9 +9,9 @@ public class ApplicationIdentityDbContext : IdentityDbContext<ApplicationUser>
 {
   private readonly string _connectionString;
 
-  public ApplicationIdentityDbContext (IConnectionStringFactory connectionStringFactory)
+  public ApplicationIdentityDbContext (IDatabaseConnectionStringFactory databaseConnectionStringFactory)
   {
-    _connectionString = connectionStringFactory.GetConnectionString();
+    _connectionString = databaseConnectionStringFactory.GetConnectionString();
   }
   
   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
