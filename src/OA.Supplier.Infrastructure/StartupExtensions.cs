@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OA.Supplier.Domain;
 using OA.Supplier.Domain.SupplierRates;
+using OA.Supplier.Domain.Suppliers;
 using OA.Supplier.Infrastructure.Persistence;
 using OA.Supplier.Infrastructure.Persistence.SupplierRates;
 using OA.Supplier.Infrastructure.Persistence.Suppliers;
@@ -23,6 +24,7 @@ public static class StartupExtensions
     services.AddScoped<IRepository<Domain.Suppliers.Supplier>, SupplierRepository>();
     services.AddScoped<IRepository<SupplierRate>, SupplierRateRepository>();
     services.AddScoped<IGetSupplierRatesBySupplierQuery, GetSupplierRatesBySupplierQuery>();
+    services.AddScoped<IGetSuppliersWithRatesQuery, GetSuppliersWithRatesQuery>();
     
     return services;
   }

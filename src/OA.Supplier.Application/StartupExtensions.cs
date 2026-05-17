@@ -13,6 +13,7 @@ public static class StartupExtensions
     
     services.AddScoped<CreateSupplier.ICommandHandler, CreateSupplier.CommandHandler>();
     services.AddScoped<GetSuppliersQueryHandler.IQueryHandler, GetSuppliersQueryHandler.QueryHandler>();
+    services.AddScoped<GetSuppliersWithRatesQueryHandler.IQueryHandler, GetSuppliersWithRatesQueryHandler.QueryHandler>();
     services.AddScoped<GetSupplierQueryHandler.IQueryHandler, GetSupplierQueryHandler.QueryHandler>();
     services.AddScoped<UpdateSupplier.ICommandHandler, UpdateSupplier.CommandHandler>();
     services.AddScoped<DeleteSupplier.ICommandHandler, DeleteSupplier.CommandHandler>();
