@@ -15,6 +15,7 @@
 @inject GetSupplierRatesQueryHandler.IQueryHandler GetSupplierRatesQueryHandler
 @inject CreateSupplierRate.ICommandHandler CreateSupplierRateCommandHandler
 @inject UpdateSupplierRate.ICommandHandler UpdateSupplierRateCommandHandler
+@inject DeleteSupplierRate.ICommandHandler DeleteSupplierRateCommandHandler
 @inject UpdateSupplier.ICommandHandler UpdateSupplierCommandHandler
 
 @attribute [Authorize]
@@ -86,9 +87,14 @@ else
             {
                 <tr>
                     <td>
-                        <button class="btn btn-primary" @onclick="() => EditSupplierRate(supplierRate)">
-                            Edit
-                        </button>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-primary" @onclick="() => EditSupplierRate(supplierRate)">
+                                Edit
+                            </button>
+                            <button class="btn btn-danger" @onclick="() => DeleteSupplierRateItem(supplierRate.Id)">
+                                Delete
+                            </button>
+                        </div>
                     </td>
                     <td>@supplierRate.Rate</td>
                     <td>@supplierRate.RateStartDate</td>
@@ -223,6 +229,14 @@ else
             RateEndDate = supplierRate.RateEndDate
         };
         _isRatePanelOpen = true;
+    }
+
+    private async Task DeleteSupplierRateItem(int id)
+    {
+        bool result = await DeleteSupplierRateCommandHandler.HandleAsync(new DeleteSupplierRate.DeleteSupplierRateRequest(id));
+
+        if (result)
+            await RefreshSupplierRates();
     }
 
     private async Task HandleSaveSupplierRate()

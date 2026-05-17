@@ -7,6 +7,8 @@ public interface ISupplierRateDomainService
   Task<SupplierRate> CreateSupplierRate(CreateSupplierRateRequest request, CancellationToken cancellationToken = default);
 
   Task<bool> UpdateSupplierRate(UpdateSupplierRateRequest request, CancellationToken cancellationToken = default);
+
+  Task<bool> DeleteSupplierRate(int id, CancellationToken cancellationToken = default);
 }
 
 public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRepository, ILogger<SupplierRateDomainService> logger) : ISupplierRateDomainService
@@ -51,4 +53,7 @@ public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRep
 
     return await supplierRateRepository.UpdateAsync(supplierRate, cancellationToken);
   }
+
+  public Task<bool> DeleteSupplierRate(int id, CancellationToken cancellationToken = default) =>
+    supplierRateRepository.DeleteAsync(id, cancellationToken);
 }
