@@ -6,7 +6,7 @@ namespace OA.Supplier.ComponentTests;
 public abstract class WebApplicationTestBase
 {
   [ClassDataSource<WebApplicationFactory>(Shared = SharedType.PerTestSession)]
-  public WebApplicationFactory Factory { get; init; }
+  public WebApplicationFactory Factory { get; init; } = null!;
 
   public HttpClient HttpClient { get; private set; } = default!;
   

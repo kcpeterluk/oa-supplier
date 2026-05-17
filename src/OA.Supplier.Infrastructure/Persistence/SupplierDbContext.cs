@@ -12,6 +12,8 @@ public class SupplierDbContext : DbContext
   }
   
   public DbSet<Domain.Suppliers.Supplier> Supplier { get; set; }
+
+  public DbSet<Domain.SupplierRates.SupplierRate> SupplierRate { get; set; }
   
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {

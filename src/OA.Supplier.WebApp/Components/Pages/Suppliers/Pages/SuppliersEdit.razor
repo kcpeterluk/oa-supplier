@@ -1,5 +1,6 @@
 ﻿@page "/suppliers/{Id:int}/edit"
 @using Microsoft.AspNetCore.Authorization
+@using OA.Supplier.Application.SupplierRates
 @using OA.Supplier.Application.Suppliers
 @using OA.Supplier.Domain.Suppliers
 
@@ -7,6 +8,7 @@
 
 @inject NavigationManager NavigationManager
 @inject GetSupplierQueryHandler.IQueryHandler GetSupplierQueryHandler
+@inject GetSupplierRatesQueryHandler.IQueryHandler GetSupplierRatesQueryHandler
 @inject UpdateSupplier.ICommandHandler UpdateSupplierCommandHandler
 
 @attribute [Authorize]
@@ -39,6 +41,46 @@
     <button type="submit" class="btn btn-primary">Save</button>
 </EditForm>
 
+<h3 class="mt-4">Rates</h3>
+
+@if (_supplierRates is null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th aria-label="Supplier Rate">Rate</th>
+            <th aria-label="Supplier Rate Start Date">Start Date</th>
+            <th aria-label="Supplier Rate End Date">End Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (_supplierRates.Length == 0)
+        {
+            <tr>
+                <td colspan="3">No supplier rates found.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (SupplierRateViewModel supplierRate in _supplierRates)
+            {
+                <tr>
+                    <td>@supplierRate.Rate</td>
+                    <td>@supplierRate.RateStartDate</td>
+                    <td>@supplierRate.RateEndDate</td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+}
+
 @code {
     [Parameter]
     public int Id { get; set; }
@@ -48,6 +90,8 @@
         Name = string.Empty,
         Address = string.Empty
     };
+
+    private SupplierRateViewModel[]? _supplierRates;
     
     protected override async Task OnInitializedAsync()
     {
@@ -60,6 +104,9 @@
                 Address = supplier.Address
             };
         }
+
+        IEnumerable<SupplierRateDto> supplierRates = await GetSupplierRatesQueryHandler.HandleAsync(Id);
+        _supplierRates = supplierRates.Select(SupplierRateViewModel.MapFrom).ToArray();
     }
 
     private void NavigateBack()
@@ -77,5 +124,11 @@
         
         if (result)
             NavigateBack();
+    }
+
+    private record SupplierRateViewModel(decimal Rate, DateOnly RateStartDate, DateOnly RateEndDate)
+    {
+        public static SupplierRateViewModel MapFrom(SupplierRateDto supplierRate) => 
+            new(supplierRate.Rate, supplierRate.RateStartDate, supplierRate.RateEndDate);
     }
 }

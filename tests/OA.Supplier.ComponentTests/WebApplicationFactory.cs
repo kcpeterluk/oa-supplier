@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OA.Supplier.Infrastructure.Persistence;
+using TUnit.AspNetCore;
 
 namespace OA.Supplier.ComponentTests;
 
-public class WebApplicationFactory : WebApplicationFactory<Program>
+public class WebApplicationFactory : TestWebApplicationFactory<Program>
 {
   [ClassDataSource<TestDatabaseWrapper>(Shared = SharedType.PerTestSession)]
   public required TestDatabaseWrapper Database { get; init; } = null!;

@@ -14,8 +14,8 @@ public class TestDatabaseWrapper : IAsyncInitializer, IAsyncDisposable
   
   private MsSqlContainer? _mssqlContainer;
 
-  public IDatabaseConnectionStringFactory DatabaseConnectionStringFactory { get; private set; }
-  
+  public IDatabaseConnectionStringFactory DatabaseConnectionStringFactory { get; private set; } = null!;
+
   public async Task InitializeAsync()
   {
     _mssqlContainer = new MsSqlBuilder(SqlImage)
