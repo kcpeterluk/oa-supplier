@@ -38,8 +38,8 @@ public class UpdateSupplierRateTests : WebApplicationTestBase
     await Assert.That(result).IsTrue();
 
     using IServiceScope verificationScope = CreateServiceScope();
-    IRepository<Domain.SupplierRates.SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<Domain.SupplierRates.SupplierRate>>();
-    Domain.SupplierRates.SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
+    IRepository<SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<SupplierRate>>();
+    SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
 
     await Assert.That(updatedSupplierRate).IsNotNull();
     await Assert.That(updatedSupplierRate!.SupplierId).IsEqualTo(supplier.Id);
@@ -77,8 +77,8 @@ public class UpdateSupplierRateTests : WebApplicationTestBase
     await Assert.That(result).IsTrue();
 
     using IServiceScope verificationScope = CreateServiceScope();
-    IRepository<Domain.SupplierRates.SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<Domain.SupplierRates.SupplierRate>>();
-    Domain.SupplierRates.SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
+    IRepository<SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<SupplierRate>>();
+    SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
 
     await Assert.That(updatedSupplierRate).IsNotNull();
     await Assert.That(updatedSupplierRate!.Rate).IsEqualTo(150.00m);
@@ -115,8 +115,8 @@ public class UpdateSupplierRateTests : WebApplicationTestBase
     await Assert.That(result).IsTrue();
 
     using IServiceScope verificationScope = CreateServiceScope();
-    IRepository<Domain.SupplierRates.SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<Domain.SupplierRates.SupplierRate>>();
-    Domain.SupplierRates.SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
+    IRepository<SupplierRate> supplierRateRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<SupplierRate>>();
+    SupplierRate? updatedSupplierRate = await supplierRateRepository.GetByIdAsync(supplierRate.Id);
 
     await Assert.That(updatedSupplierRate).IsNotNull();
     await Assert.That(updatedSupplierRate!.RateStartDate).IsEqualTo(rateDate);
