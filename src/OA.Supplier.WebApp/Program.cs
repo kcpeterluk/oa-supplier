@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using OA.Supplier.Application;
+using OA.Supplier.Domain;
 using OA.Supplier.Infrastructure;
 using OA.Supplier.Infrastructure.Persistence;
 using OA.Supplier.WebApp;
@@ -21,8 +23,12 @@ builder.Services.AddAuthenticationServices();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IConnectionStringFactory, ConnectionStringFactory>();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services
+    .AddApplicationServices()
+    .AddDomainServices()
+    .AddInfrastructureServices(builder.Configuration);
 
 WebApplication app = builder.Build();
 

@@ -1,7 +1,17 @@
 ﻿@page "/suppliers/create"
+
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using OA.Supplier.Application.Suppliers
+@using OA.Supplier.Domain.Suppliers
+
 @rendermode InteractiveServer
+
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CreateSupplier.ICommandHandler CreateSupplierCommandHandler
+
+@attribute [Authorize]
 
 <PageTitle>Supplier</PageTitle>
 
@@ -37,6 +47,15 @@
         Name = string.Empty,
         Address = string.Empty
     };
+    
+    private string _userName = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userName = user.Identity?.Name ?? string.Empty;
+    }
 
     private void NavigateBack()
     {
@@ -45,7 +64,11 @@
 
     private void HandleSubmit()
     {
-        // Save to database / API here
+        Task<SupplierDto> supplier = CreateSupplierCommandHandler.HandleAsync(new CreateSupplierRequest(
+            Name: _supplier.Name,
+            Address: _supplier.Address,
+            CreatedByUser: _userName
+        ));
     }
 
     private record SupplierViewModel

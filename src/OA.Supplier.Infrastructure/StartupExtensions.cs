@@ -10,7 +10,7 @@ namespace OA.Supplier.Infrastructure;
 
 public static class StartupExtensions
 {
-  public static IServiceCollection AddInfrastructure(
+  public static IServiceCollection AddInfrastructureServices(
     this IServiceCollection services, 
     IConfiguration configuration,
     bool isDevelopment = false)

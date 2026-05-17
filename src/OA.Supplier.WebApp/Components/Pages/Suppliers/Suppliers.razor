@@ -1,8 +1,14 @@
 ﻿@page "/suppliers"
+
+@using Microsoft.AspNetCore.Authorization
 @using OA.Supplier.Domain.Suppliers
+
 @rendermode InteractiveServer
+
 @inject ISupplierRepository SupplierRepository
 @inject NavigationManager NavigationManager
+
+@attribute [Authorize]
 
 <PageTitle>Supplier</PageTitle>
 
@@ -46,7 +52,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         IEnumerable<Supplier> suppliers = await SupplierRepository.GetAllAsync();
-        IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(MapFrom);
+        IEnumerable<SupplierViewModel> suppliersViewModel = suppliers.Select(SupplierViewModel.MapFrom);
         _suppliers = suppliersViewModel.ToArray();
     }
     
@@ -55,17 +61,9 @@ else
         NavigationManager.NavigateTo("/suppliers/create");
     }
     
-    private static SupplierViewModel MapFrom(Supplier supplier) => new()
+    private record SupplierViewModel(int Id, string Name, string Address)
     {
-        Id = supplier.Id.ToString(),
-        Name = supplier.Name,
-        Address = supplier.Address
-    };
-    
-    private record SupplierViewModel
-    {
-        public required string Id { get; init; }
-        public required string Name { get; init; }
-        public required string Address { get; init; }
+        public static SupplierViewModel MapFrom(Supplier supplier) => 
+            new(supplier.Id, supplier.Name, supplier.Address);
     }
 }

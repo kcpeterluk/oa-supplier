@@ -11,4 +11,16 @@ public class Supplier : AggregateRoot
   public string Name { get; private set; }
 
   public string Address { get; private set; }
+  
+  public static Supplier Create(string name, string address, string createdByUser)
+  {
+    DomainValidationException.ThrowIfNullOrWhiteSpace(name);
+    DomainValidationException.ThrowIfNullOrWhiteSpace(address);
+    DomainValidationException.ThrowIfNullOrWhiteSpace(createdByUser);
+    
+    return new Supplier(name, address)
+    {
+      CreatedByUser = createdByUser
+    };
+  }
 }
