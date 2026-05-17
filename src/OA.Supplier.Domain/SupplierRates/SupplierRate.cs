@@ -1,0 +1,41 @@
+namespace OA.Supplier.Domain.SupplierRates;
+
+public class SupplierRate : AggregateRoot
+{ 
+  public SupplierRate(int supplierId, decimal rate, DateOnly rateStartDate, DateOnly rateEndDate)
+  {
+    SupplierId = supplierId;
+    Rate = rate;
+    RateStartDate = rateStartDate;
+    RateEndDate = rateEndDate;
+  }
+
+  public int SupplierId { get; private set; }
+  
+  public decimal Rate { get; private set; }
+
+  public DateOnly RateStartDate { get; private set; }
+
+  public DateOnly RateEndDate { get; private set; }
+  
+  public static SupplierRate Create(int supplierId, decimal rate, DateOnly rateStartDate, DateOnly rateEndDate, string createdByUser)
+  {
+    if (supplierId <= 0)    {
+      throw new DomainValidationException("SupplierId must be greater than 0.");
+    }
+    if (rate < 0)    {
+      throw new DomainValidationException("Rate must be a positive value.");
+    }
+    if (rateStartDate > rateEndDate)    {
+      throw new DomainValidationException("Rate start date must be before or equal to rate end date.");
+    }
+    if (rateStartDate == rateEndDate)    {
+      throw new DomainValidationException("Rate start date and rate end date cannot be the same.");
+    }
+    
+    return new SupplierRate(supplierId, rate, rateStartDate, rateEndDate)
+    {
+      CreatedByUser = createdByUser
+    };
+  }
+}

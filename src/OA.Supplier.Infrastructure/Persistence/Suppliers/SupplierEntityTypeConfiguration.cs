@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OA.Supplier.Domain.SupplierRates;
 
 namespace OA.Supplier.Infrastructure.Persistence.Suppliers;
 
@@ -26,5 +27,10 @@ internal class SupplierEntityTypeConfiguration : IEntityTypeConfiguration<Domain
     builder.Property(x => x.CreatedOn)
       .IsRequired()
       .HasDefaultValueSql("getdate()");
+    
+    builder.HasMany<SupplierRate>()
+      .WithOne()
+      .HasForeignKey(x => x.SupplierId)
+      .IsRequired();
   }
 }
