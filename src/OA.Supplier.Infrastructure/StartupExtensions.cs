@@ -19,8 +19,11 @@ public static class StartupExtensions
   {
     string connectionString = GetConnectionString(configuration, isDevelopment);
     services.AddDbContext<SupplierDbContext>(options => options.UseSqlServer(connectionString));
+    
     services.AddScoped<IRepository<Domain.Suppliers.Supplier>, SupplierRepository>();
     services.AddScoped<IRepository<SupplierRate>, SupplierRateRepository>();
+    services.AddScoped<IGetSupplierRatesBySupplierQuery, GetSupplierRatesBySupplierQuery>();
+    
     return services;
   }
 
