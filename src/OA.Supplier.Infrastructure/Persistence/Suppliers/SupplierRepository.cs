@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using OA.Supplier.Domain.Suppliers;
+using OA.Supplier.Domain;
 
 namespace OA.Supplier.Infrastructure.Persistence.Suppliers;
 
-internal class SupplierRepository(SupplierDbContext supplierDbContext) : ISupplierRepository
+internal class SupplierRepository(SupplierDbContext supplierDbContext) : IRepository<Domain.Suppliers.Supplier>
 {
   public async Task<Domain.Suppliers.Supplier?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => 
     await supplierDbContext.Supplier.FindAsync(id, cancellationToken);

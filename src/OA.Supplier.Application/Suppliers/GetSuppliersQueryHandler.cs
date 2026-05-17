@@ -1,4 +1,4 @@
-using OA.Supplier.Domain.Suppliers;
+using OA.Supplier.Domain;
 
 namespace OA.Supplier.Application.Suppliers;
 
@@ -9,7 +9,7 @@ public static class GetSuppliersQueryHandler
     Task<IEnumerable<SupplierDto>> HandleAsync(CancellationToken cancellationToken = default);
   }
 
-  public class QueryHandler(ISupplierRepository supplierRepository) : IQueryHandler
+  public class QueryHandler(IRepository<Domain.Suppliers.Supplier> supplierRepository) : IQueryHandler
   {
     public async Task<IEnumerable<SupplierDto>> HandleAsync(CancellationToken cancellationToken = default)
     {

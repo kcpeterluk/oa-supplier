@@ -11,7 +11,7 @@ public interface ISupplierDomainService
   Task<bool> DeleteSupplier(int id, CancellationToken cancellationToken = default);
 }
 
-public class SupplierDomainService(ISupplierRepository supplierRepository, ILogger<SupplierDomainService> logger) : ISupplierDomainService
+public class SupplierDomainService(IRepository<Supplier> supplierRepository, ILogger<SupplierDomainService> logger) : ISupplierDomainService
 {
   public async Task<Supplier> CreateSupplier(CreateSupplierRequest request, CancellationToken cancellationToken = default)
   {

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using OA.Supplier.Application.Suppliers;
+using OA.Supplier.Domain;
 using OA.Supplier.Domain.Suppliers;
 using SupplierEntity = OA.Supplier.Domain.Suppliers.Supplier;
 
@@ -27,7 +28,7 @@ public class DeleteSupplierTests : WebApplicationTestBase
     await Assert.That(result).IsTrue();
 
     using IServiceScope verificationScope = CreateServiceScope();
-    ISupplierRepository supplierRepository = verificationScope.ServiceProvider.GetRequiredService<ISupplierRepository>();
+    IRepository<Domain.Suppliers.Supplier> supplierRepository = verificationScope.ServiceProvider.GetRequiredService<IRepository<Domain.Suppliers.Supplier>>();
     SupplierEntity? deletedSupplier = await supplierRepository.GetByIdAsync(supplier.Id);
 
     await Assert.That(deletedSupplier).IsNull();

@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OA.Supplier.Domain;
 using OA.Supplier.Domain.Suppliers;
 using OA.Supplier.Infrastructure.Persistence;
 using OA.Supplier.Infrastructure.Persistence.Suppliers;
@@ -17,7 +18,7 @@ public static class StartupExtensions
   {
     string connectionString = GetConnectionString(configuration, isDevelopment);
     services.AddDbContext<SupplierDbContext>(options => options.UseSqlServer(connectionString));
-    services.AddScoped<ISupplierRepository, SupplierRepository>();
+    services.AddScoped<IRepository<Domain.Suppliers.Supplier>, SupplierRepository>();
     return services;
   }
 
