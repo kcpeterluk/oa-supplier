@@ -1,5 +1,6 @@
 ﻿@page "/suppliers/{Id:int}/edit"
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 @using OA.Supplier.Application.SupplierRates
 @using OA.Supplier.Application.Suppliers
@@ -13,6 +14,7 @@
 @inject GetSupplierQueryHandler.IQueryHandler GetSupplierQueryHandler
 @inject GetSupplierRatesQueryHandler.IQueryHandler GetSupplierRatesQueryHandler
 @inject CreateSupplierRate.ICommandHandler CreateSupplierRateCommandHandler
+@inject UpdateSupplierRate.ICommandHandler UpdateSupplierRateCommandHandler
 @inject UpdateSupplier.ICommandHandler UpdateSupplierCommandHandler
 
 @attribute [Authorize]
@@ -65,6 +67,7 @@ else
     <table class="table">
         <thead>
         <tr>
+            <th></th>
             <th aria-label="Supplier Rate">Rate</th>
             <th aria-label="Supplier Rate Start Date">Start Date</th>
             <th aria-label="Supplier Rate End Date">End Date</th>
@@ -74,7 +77,7 @@ else
         @if (_supplierRates.Length == 0)
         {
             <tr>
-                <td colspan="3">No supplier rates found.</td>
+                <td colspan="4">No supplier rates found.</td>
             </tr>
         }
         else
@@ -82,6 +85,11 @@ else
             @foreach (SupplierRateViewModel supplierRate in _supplierRates)
             {
                 <tr>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditSupplierRate(supplierRate)">
+                            Edit
+                        </button>
+                    </td>
                     <td>@supplierRate.Rate</td>
                     <td>@supplierRate.RateStartDate</td>
                     <td>@supplierRate.RateEndDate?.ToString()</td>
@@ -100,13 +108,13 @@ else
            style="visibility: visible;"
            role="dialog"
            aria-modal="true"
-           aria-labelledby="add-rate-title">
+           aria-labelledby="rate-panel-title">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="add-rate-title">Add Rate</h5>
+            <h5 class="offcanvas-title" id="rate-panel-title">@RatePanelTitle</h5>
             <button type="button" class="btn-close" @onclick="CloseRatePanel" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <EditForm Model="_supplierRateEditorViewModel" OnValidSubmit="HandleCreateSupplierRate">
+            <EditForm Model="_supplierRateEditorViewModel" OnValidSubmit="HandleSaveSupplierRate">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -149,13 +157,15 @@ else
 
     private SupplierRateEditorViewModel _supplierRateEditorViewModel = CreateDefaultSupplierRateEditorViewModel(0);
     private SupplierRateViewModel[]? _supplierRates;
+    private int? _editingSupplierRateId;
     private bool _isRatePanelOpen;
     private string _userName = string.Empty;
+    private string RatePanelTitle => _editingSupplierRateId.HasValue ? "Edit Rate" : "Add Rate";
     
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ClaimsPrincipal user = authState.User;
         _userName = user.Identity?.Name ?? string.Empty;
         
         SupplierDto? supplier = await GetSupplierQueryHandler.HandleAsync(Id);
@@ -191,26 +201,54 @@ else
     private void OpenRatePanel()
     {
         _supplierRateEditorViewModel = CreateDefaultSupplierRateEditorViewModel(Id);
+        _editingSupplierRateId = null;
         _isRatePanelOpen = true;
     }
 
     private void CloseRatePanel()
     {
         _isRatePanelOpen = false;
+        _editingSupplierRateId = null;
+        _supplierRateEditorViewModel = CreateDefaultSupplierRateEditorViewModel(Id);
     }
 
-    private async Task HandleCreateSupplierRate()
+    private void EditSupplierRate(SupplierRateViewModel supplierRate)
     {
-        await CreateSupplierRateCommandHandler.HandleAsync(new CreateSupplierRateRequest(
-            SupplierId: _supplierRateEditorViewModel.SupplierId,
-            Rate: _supplierRateEditorViewModel.Rate,
-            RateStartDate: _supplierRateEditorViewModel.RateStartDate,
-            RateEndDate: _supplierRateEditorViewModel.RateEndDate,
-            CreatedByUser: _userName
-        ));
+        _editingSupplierRateId = supplierRate.Id;
+        _supplierRateEditorViewModel = new SupplierRateEditorViewModel
+        {
+            SupplierId = supplierRate.SupplierId,
+            Rate = supplierRate.Rate,
+            RateStartDate = supplierRate.RateStartDate,
+            RateEndDate = supplierRate.RateEndDate
+        };
+        _isRatePanelOpen = true;
+    }
+
+    private async Task HandleSaveSupplierRate()
+    {
+        if (_editingSupplierRateId.HasValue)
+        {
+            await UpdateSupplierRateCommandHandler.HandleAsync(new UpdateSupplierRateRequest(
+                Id: _editingSupplierRateId.Value,
+                SupplierId: _supplierRateEditorViewModel.SupplierId,
+                Rate: _supplierRateEditorViewModel.Rate,
+                RateStartDate: _supplierRateEditorViewModel.RateStartDate,
+                RateEndDate: _supplierRateEditorViewModel.RateEndDate
+            ));
+        }
+        else
+        {
+            await CreateSupplierRateCommandHandler.HandleAsync(new CreateSupplierRateRequest(
+                SupplierId: _supplierRateEditorViewModel.SupplierId,
+                Rate: _supplierRateEditorViewModel.Rate,
+                RateStartDate: _supplierRateEditorViewModel.RateStartDate,
+                RateEndDate: _supplierRateEditorViewModel.RateEndDate,
+                CreatedByUser: _userName
+            ));
+        }
 
         await RefreshSupplierRates();
-        _supplierRateEditorViewModel = CreateDefaultSupplierRateEditorViewModel(Id);
         CloseRatePanel();
     }
 
@@ -231,10 +269,10 @@ else
         };
     }
 
-    private record SupplierRateViewModel(decimal Rate, DateOnly RateStartDate, DateOnly? RateEndDate)
+    private record SupplierRateViewModel(int Id, int SupplierId, decimal Rate, DateOnly RateStartDate, DateOnly? RateEndDate)
     {
         public static SupplierRateViewModel MapFrom(SupplierRateDto supplierRate) => 
-            new(supplierRate.Rate, supplierRate.RateStartDate, supplierRate.RateEndDate);
+            new(supplierRate.Id, supplierRate.SupplierId, supplierRate.Rate, supplierRate.RateStartDate, supplierRate.RateEndDate);
     }
 
     private class SupplierRateEditorViewModel : IValidatableObject

@@ -1,5 +1,6 @@
 ﻿@page "/suppliers/create"
 
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 @using OA.Supplier.Application.Suppliers
 @using OA.Supplier.Domain.Suppliers
@@ -51,8 +52,8 @@
     
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ClaimsPrincipal user = authState.User;
         _userName = user.Identity?.Name ?? string.Empty;
     }
 

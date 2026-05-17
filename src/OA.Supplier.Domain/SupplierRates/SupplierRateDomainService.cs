@@ -5,6 +5,8 @@ namespace OA.Supplier.Domain.SupplierRates;
 public interface ISupplierRateDomainService
 {
   Task<SupplierRate> CreateSupplierRate(CreateSupplierRateRequest request, CancellationToken cancellationToken = default);
+
+  Task<bool> UpdateSupplierRate(UpdateSupplierRateRequest request, CancellationToken cancellationToken = default);
 }
 
 public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRepository, ILogger<SupplierRateDomainService> logger) : ISupplierRateDomainService
@@ -29,5 +31,24 @@ public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRep
       logger.LogError(e, "Error creating supplier rate");
       throw;
     }
+  }
+
+  public async Task<bool> UpdateSupplierRate(UpdateSupplierRateRequest request, CancellationToken cancellationToken = default)
+  {
+    SupplierRate? supplierRate = await supplierRateRepository.GetByIdAsync(request.Id, cancellationToken);
+
+    if (supplierRate is null)
+    {
+      throw new InvalidOperationException("Supplier rate not found");
+    }
+
+    if (supplierRate.SupplierId != request.SupplierId)
+    {
+      throw new InvalidOperationException("Supplier rate not found");
+    }
+
+    supplierRate.Update(request.Rate, request.RateStartDate, request.RateEndDate);
+
+    return await supplierRateRepository.UpdateAsync(supplierRate, cancellationToken);
   }
 }
