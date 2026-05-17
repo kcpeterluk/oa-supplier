@@ -12,12 +12,11 @@ public static class CreateSupplier
 
   public class CommandHandler(ISupplierDomainService supplierDomainService, IValidator<CreateSupplierRequest> validator) : ICommandHandler
   {
-    public Task<SupplierDto> HandleAsync(CreateSupplierRequest request, CancellationToken cancellationToken = default)
+    public async Task<SupplierDto> HandleAsync(CreateSupplierRequest request, CancellationToken cancellationToken = default)
     {
-      validator.ValidateAndThrow(request);
-    
-      return supplierDomainService.CreateSupplier(request, cancellationToken)
-        .ContinueWith(task => SupplierDto.MapFrom(task.Result), cancellationToken);
+      await validator.ValidateAndThrowAsync(request, cancellationToken);
+      Domain.Suppliers.Supplier supplier = await supplierDomainService.CreateSupplier(request, cancellationToken);
+      return SupplierDto.MapFrom(supplier);
     }
   }
 }

@@ -23,4 +23,13 @@ public class Supplier : AggregateRoot
       CreatedByUser = createdByUser
     };
   }
+  
+  public void Update(string name, string address)
+  {
+    DomainValidationException.ThrowIfNullOrWhiteSpace(name);
+    DomainValidationException.ThrowIfNullOrWhiteSpace(address);
+    
+    Name = name;
+    Address = address;
+  }
 }

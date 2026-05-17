@@ -30,6 +30,7 @@ else
     <table class="table">
         <thead>
         <tr>
+            <th></th>
             <th aria-label="Supplier Name">Name</th>
             <th aria-label="Supplier Address">Address</th>
         </tr>
@@ -38,6 +39,11 @@ else
         @foreach (SupplierViewModel supplier in _suppliers)
         {
             <tr>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => EditItem(supplier.Id)">
+                        Edit
+                    </button>
+                </td>
                 <td>@supplier.Name</td>
                 <td>@supplier.Address</td>
             </tr>
@@ -59,6 +65,11 @@ else
     private void AddItem()
     {
         NavigationManager.NavigateTo("/suppliers/create");
+    }
+    
+    private void EditItem(int id)
+    {
+        NavigationManager.NavigateTo($"/suppliers/{id}/edit");
     }
     
     private record SupplierViewModel(int Id, string Name, string Address)

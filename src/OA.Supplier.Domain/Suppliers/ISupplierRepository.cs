@@ -2,7 +2,7 @@ namespace OA.Supplier.Domain.Suppliers;
 
 public interface ISupplierRepository
 {
-  Task<Supplier> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+  Task<Supplier?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
   Task<IEnumerable<Supplier>> GetAllAsync(CancellationToken cancellationToken = default);
 
@@ -10,5 +10,5 @@ public interface ISupplierRepository
 
   Task<bool> UpdateAsync(Supplier supplier, CancellationToken cancellationToken = default);
 
-  Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+  Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

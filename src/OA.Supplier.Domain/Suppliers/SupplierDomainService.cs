@@ -5,6 +5,8 @@ namespace OA.Supplier.Domain.Suppliers;
 public interface ISupplierDomainService
 {
   Task<Supplier> CreateSupplier(CreateSupplierRequest request, CancellationToken cancellationToken = default);
+  
+  Task<bool> UpdateSupplier(UpdateSupplierRequest request, CancellationToken cancellationToken = default);
 }
 
 public class SupplierDomainService(ISupplierRepository supplierRepository, ILogger<SupplierDomainService> logger) : ISupplierDomainService
@@ -24,5 +26,19 @@ public class SupplierDomainService(ISupplierRepository supplierRepository, ILogg
       logger.LogError(e, "Error creating supplier");
       throw;
     }
+  }
+
+  public async Task<bool> UpdateSupplier(UpdateSupplierRequest request, CancellationToken cancellationToken = default)
+  {
+    Supplier? supplier = await supplierRepository.GetByIdAsync(request.Id, cancellationToken);
+
+    if (supplier is null)
+    {
+      throw new InvalidOperationException("Supplier not found");
+    }
+
+    supplier.Update(request.Name, request.Address);
+
+    return await supplierRepository.UpdateAsync(supplier, cancellationToken);
   }
 }

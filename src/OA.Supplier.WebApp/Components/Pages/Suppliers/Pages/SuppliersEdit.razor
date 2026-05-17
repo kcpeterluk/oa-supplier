@@ -1,0 +1,81 @@
+﻿@page "/suppliers/{Id:int}/edit"
+@using Microsoft.AspNetCore.Authorization
+@using OA.Supplier.Application.Suppliers
+@using OA.Supplier.Domain.Suppliers
+
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject ISupplierRepository SupplierRepository
+@inject UpdateSupplier.ICommandHandler UpdateSupplierCommandHandler
+
+@attribute [Authorize]
+
+<PageTitle>Supplier</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Supplier</h1>
+    <button class="btn btn-outline-secondary" @onclick="NavigateBack" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</div>
+
+<EditForm Model="_supplierEditorViewModel" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <InputText class="form-control" @bind-Value="_supplierEditorViewModel.Name" />
+        <ValidationMessage For="@(() => _supplierEditorViewModel.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <InputText class="form-control" @bind-Value="_supplierEditorViewModel.Address" />
+        <ValidationMessage For="@(() => _supplierEditorViewModel.Address)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    
+    private SupplierEditorViewModel _supplierEditorViewModel = new()
+    {
+        Name = string.Empty,
+        Address = string.Empty
+    };
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Supplier? supplier = await SupplierRepository.GetByIdAsync(Id);
+        if (supplier is not null)
+        {
+            _supplierEditorViewModel = new SupplierEditorViewModel
+            {
+                Name = supplier.Name,
+                Address = supplier.Address
+            };
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/suppliers");
+    }
+
+    private async Task HandleSubmit()
+    {
+        bool result = await UpdateSupplierCommandHandler.HandleAsync(new UpdateSupplierRequest(
+            Id: Id,
+            Name: _supplierEditorViewModel.Name,
+            Address: _supplierEditorViewModel.Address
+        ));
+        
+        if (result)
+            NavigateBack();
+    }
+}

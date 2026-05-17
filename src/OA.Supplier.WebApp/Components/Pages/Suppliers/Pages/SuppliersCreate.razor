@@ -1,6 +1,5 @@
 ﻿@page "/suppliers/create"
 
-@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using OA.Supplier.Application.Suppliers
 @using OA.Supplier.Domain.Suppliers
@@ -22,27 +21,27 @@
     </button>
 </div>
 
-<EditForm Model="_supplier" OnValidSubmit="HandleSubmit">
+<EditForm Model="_supplierEditorViewModel" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
     <div class="mb-3">
         <label class="form-label">Name</label>
-        <InputText class="form-control" @bind-Value="_supplier.Name" />
-        <ValidationMessage For="@(() => _supplier.Name)" />
+        <InputText class="form-control" @bind-Value="_supplierEditorViewModel.Name" />
+        <ValidationMessage For="@(() => _supplierEditorViewModel.Name)" />
     </div>
 
     <div class="mb-3">
         <label class="form-label">Address</label>
-        <InputText class="form-control" @bind-Value="_supplier.Address" />
-        <ValidationMessage For="@(() => _supplier.Address)" />
+        <InputText class="form-control" @bind-Value="_supplierEditorViewModel.Address" />
+        <ValidationMessage For="@(() => _supplierEditorViewModel.Address)" />
     </div>
 
     <button type="submit" class="btn btn-primary">Save</button>
 </EditForm>
 
 @code {
-    private SupplierViewModel _supplier = new()
+    private SupplierEditorViewModel _supplierEditorViewModel = new()
     {
         Name = string.Empty,
         Address = string.Empty
@@ -62,23 +61,13 @@
         NavigationManager.NavigateTo("/suppliers");
     }
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        Task<SupplierDto> supplier = CreateSupplierCommandHandler.HandleAsync(new CreateSupplierRequest(
-            Name: _supplier.Name,
-            Address: _supplier.Address,
+        SupplierDto supplier = await CreateSupplierCommandHandler.HandleAsync(new CreateSupplierRequest(
+            Name: _supplierEditorViewModel.Name,
+            Address: _supplierEditorViewModel.Address,
             CreatedByUser: _userName
         ));
-    }
-
-    private record SupplierViewModel
-    {
-        [Required]
-        [StringLength(450)]
-        public required string Name { get; set; }
-
-        [Required]
-        [StringLength(450)]
-        public required string Address { get; set; }
+        NavigationManager.NavigateTo($"/suppliers/{supplier.Id}/edit");
     }
 }

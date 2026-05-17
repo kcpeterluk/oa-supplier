@@ -5,15 +5,11 @@ namespace OA.Supplier.Infrastructure.Persistence.Suppliers;
 
 internal class SupplierRepository(SupplierDbContext supplierDbContext) : ISupplierRepository
 {
-  public Task<Domain.Suppliers.Supplier> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-  {
-    throw new NotImplementedException();
-  }
+  public async Task<Domain.Suppliers.Supplier?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => 
+    await supplierDbContext.Supplier.FindAsync(id, cancellationToken);
 
-  public async Task<IEnumerable<Domain.Suppliers.Supplier>> GetAllAsync(CancellationToken cancellationToken = default)
-  {
-    return await supplierDbContext.Supplier.ToArrayAsync(cancellationToken);
-  }
+  public async Task<IEnumerable<Domain.Suppliers.Supplier>> GetAllAsync(CancellationToken cancellationToken = default) => 
+    await supplierDbContext.Supplier.AsNoTracking().ToArrayAsync(cancellationToken);
 
   public async Task<Domain.Suppliers.Supplier> AddAsync(Domain.Suppliers.Supplier supplier, CancellationToken cancellationToken = default)
   {
@@ -22,12 +18,13 @@ internal class SupplierRepository(SupplierDbContext supplierDbContext) : ISuppli
     return supplier;
   }
 
-  public Task<bool> UpdateAsync(Domain.Suppliers.Supplier supplier, CancellationToken cancellationToken = default)
+  public async Task<bool> UpdateAsync(Domain.Suppliers.Supplier supplier, CancellationToken cancellationToken = default)
   {
-    throw new NotImplementedException();
+    int result = await supplierDbContext.SaveChangesAsync(cancellationToken);
+    return result > 0;
   }
 
-  public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+  public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
   {
     throw new NotImplementedException();
   }
