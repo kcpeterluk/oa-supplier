@@ -18,3 +18,15 @@ Accept: application/json
 Authorization: Bearer {{AccessToken}}
 
 ###
+
+GET {{OA.Supplier.WebApi_HostAddress}}/api/suppliers/overlaps
+Accept: application/json
+Authorization: Bearer {{AccessToken}}
+
+###
+
+GET {{OA.Supplier.WebApi_HostAddress}}/api/suppliers/overlaps?supplierId=2
+Accept: application/json
+Authorization: Bearer {{AccessToken}}
+
+###

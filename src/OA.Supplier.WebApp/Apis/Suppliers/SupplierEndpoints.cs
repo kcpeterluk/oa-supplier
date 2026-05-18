@@ -23,6 +23,16 @@ public static class SupplierEndpoints
         return TypedResults.Ok(new ApiResponse<IEnumerable<SupplierWithRatesDto>>(suppliers));
       })
       .WithName("GetSuppliers");
+
+    group.MapGet("overlaps", async (
+        int? supplierId,
+        GetOverlappingSuppliersWithRatesQueryHandler.IQueryHandler queryHandler,
+        CancellationToken cancellationToken) =>
+      {
+        IEnumerable<SupplierWithRatesDto> suppliers = await queryHandler.HandleAsync(supplierId, cancellationToken);
+        return TypedResults.Ok(new ApiResponse<IEnumerable<SupplierWithRatesDto>>(suppliers));
+      })
+      .WithName("GetOverlappingSuppliersWithRates");
     
     return group;
   }
