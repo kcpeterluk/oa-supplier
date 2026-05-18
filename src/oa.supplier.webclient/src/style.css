@@ -136,10 +136,25 @@ input:disabled {
   gap: 16px;
 }
 
+.supplier-action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
 h2 {
   margin: 0;
   color: #15202b;
   font-size: 1.25rem;
+}
+
+.overlap-results {
+  margin-top: 28px;
+}
+
+.overlap-results h3 {
+  margin: 0;
+  color: #15202b;
+  font-size: 1.125rem;
 }
 
 .supplier-message {
@@ -262,6 +277,7 @@ h2 {
   }
 
   .supplier-actions,
+  .supplier-action-buttons,
   .supplier-card-header {
     align-items: stretch;
     flex-direction: column;

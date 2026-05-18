@@ -41,6 +41,9 @@ const loginState = ref<LoginState>("idle");
 const suppliers = ref<SupplierWithRates[]>([]);
 const isFetchingSuppliers = ref(false);
 const supplierFetchState = ref<SupplierFetchState>("idle");
+const overlappingSuppliers = ref<SupplierWithRates[]>([]);
+const isFetchingOverlaps = ref(false);
+const overlapFetchState = ref<SupplierFetchState>("idle");
 
 const loginMessage = computed(() => {
   if (loginState.value === "success") {
@@ -76,13 +79,55 @@ const supplierFetchMessage = computed(() => {
   return "";
 });
 
+const overlapFetchMessage = computed(() => {
+  if (isFetchingOverlaps.value) {
+    return "Retrieving overlapping suppliers...";
+  }
+
+  if (overlapFetchState.value === "success") {
+    return `Retrieved ${overlappingSuppliers.value.length} overlapping supplier${
+      overlappingSuppliers.value.length === 1 ? "" : "s"
+    }.`;
+  }
+
+  if (overlapFetchState.value === "empty") {
+    return "No overlapping suppliers were returned.";
+  }
+
+  if (overlapFetchState.value === "error") {
+    return "Could not retrieve overlapping suppliers. Please try again.";
+  }
+
+  return "";
+});
+
 const canFetchSuppliers = computed(() =>
-  Boolean(accessToken.value) && !isLoading.value && !isFetchingSuppliers.value
+  Boolean(accessToken.value) &&
+  !isLoading.value &&
+  !isFetchingSuppliers.value &&
+  !isFetchingOverlaps.value
+);
+
+const canFetchOverlaps = computed(() =>
+  Boolean(accessToken.value) &&
+  !isLoading.value &&
+  !isFetchingSuppliers.value &&
+  !isFetchingOverlaps.value
 );
 
 function resetSuppliers() {
   suppliers.value = [];
   supplierFetchState.value = "idle";
+}
+
+function resetOverlaps() {
+  overlappingSuppliers.value = [];
+  overlapFetchState.value = "idle";
+}
+
+function resetResults() {
+  resetSuppliers();
+  resetOverlaps();
 }
 
 function formatDate(value: string | null) {
@@ -93,7 +138,7 @@ async function logIn() {
   isLoading.value = true;
   loginState.value = "idle";
   accessToken.value = "";
-  resetSuppliers();
+  resetResults();
 
   try {
     const response = await fetch("/api/account/login?useCookies=false", {
@@ -109,7 +154,7 @@ async function logIn() {
 
     if (!response.ok) {
       loginState.value = "error";
-      resetSuppliers();
+      resetResults();
       return;
     }
 
@@ -118,7 +163,7 @@ async function logIn() {
     loginState.value = "success";
   } catch {
     loginState.value = "error";
-    resetSuppliers();
+    resetResults();
   } finally {
     isLoading.value = false;
   }
@@ -127,6 +172,7 @@ async function logIn() {
 async function fetchSuppliers() {
   if (!accessToken.value) {
     supplierFetchState.value = "error";
+    resetOverlaps();
     suppliers.value = [];
     return;
   }
@@ -134,6 +180,7 @@ async function fetchSuppliers() {
   isFetchingSuppliers.value = true;
   supplierFetchState.value = "idle";
   suppliers.value = [];
+  resetOverlaps();
 
   try {
     const response = await fetch("/api/suppliers/", {
@@ -156,6 +203,44 @@ async function fetchSuppliers() {
     supplierFetchState.value = "error";
   } finally {
     isFetchingSuppliers.value = false;
+  }
+}
+
+async function fetchOverlappingSuppliers() {
+  if (!accessToken.value) {
+    overlapFetchState.value = "error";
+    resetSuppliers();
+    overlappingSuppliers.value = [];
+    return;
+  }
+
+  isFetchingOverlaps.value = true;
+  overlapFetchState.value = "idle";
+  overlappingSuppliers.value = [];
+  resetSuppliers();
+
+  try {
+    const response = await fetch("/api/suppliers/overlaps", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken.value}`
+      }
+    });
+
+    if (!response.ok) {
+      overlapFetchState.value = "error";
+      return;
+    }
+
+    const payload = (await response.json()) as ApiResponse<SupplierWithRates[]>;
+    overlappingSuppliers.value = payload.data ?? [];
+    overlapFetchState.value =
+      overlappingSuppliers.value.length > 0 ? "success" : "empty";
+  } catch {
+    overlapFetchState.value = "error";
+  } finally {
+    isFetchingOverlaps.value = false;
   }
 }
 </script>
@@ -210,13 +295,23 @@ async function fetchSuppliers() {
       <section class="supplier-panel" aria-labelledby="supplier-title">
         <div class="supplier-actions">
           <h2 id="supplier-title">Suppliers and rates</h2>
-          <button
-            type="button"
-            :disabled="!canFetchSuppliers"
-            @click="fetchSuppliers"
-          >
-            {{ isFetchingSuppliers ? "Retrieving..." : "Get suppliers" }}
-          </button>
+          <div class="supplier-action-buttons">
+            <button
+              type="button"
+              :disabled="!canFetchSuppliers"
+              @click="fetchSuppliers"
+            >
+              {{ isFetchingSuppliers ? "Retrieving..." : "Get suppliers" }}
+            </button>
+
+            <button
+              type="button"
+              :disabled="!canFetchOverlaps"
+              @click="fetchOverlappingSuppliers"
+            >
+              {{ isFetchingOverlaps ? "Retrieving overlaps..." : "Get overlaps" }}
+            </button>
+          </div>
         </div>
 
         <p
@@ -267,6 +362,63 @@ async function fetchSuppliers() {
             <p v-else class="no-rates">No rates for this supplier.</p>
           </article>
         </div>
+
+        <section
+          v-if="overlapFetchMessage || overlappingSuppliers.length"
+          class="overlap-results"
+          aria-labelledby="overlap-title"
+        >
+          <h3 id="overlap-title">Overlapping suppliers and rates</h3>
+
+          <p
+            v-if="overlapFetchMessage"
+            class="supplier-message"
+            :class="{
+              success: overlapFetchState === 'success',
+              error: overlapFetchState === 'error',
+              empty: overlapFetchState === 'empty'
+            }"
+            role="status"
+          >
+            {{ overlapFetchMessage }}
+          </p>
+
+          <div v-if="overlappingSuppliers.length" class="supplier-list">
+            <article
+              v-for="supplier in overlappingSuppliers"
+              :key="supplier.id"
+              class="supplier-card"
+            >
+              <header class="supplier-card-header">
+                <div>
+                  <h3>{{ supplier.name }}</h3>
+                  <p>{{ supplier.address }}</p>
+                </div>
+                <span>{{ supplier.supplierRates.length }} overlapping rate{{ supplier.supplierRates.length === 1 ? "" : "s" }}</span>
+              </header>
+
+              <div v-if="supplier.supplierRates.length" class="rate-list">
+                <div class="rate-row rate-heading" aria-hidden="true">
+                  <span>Rate</span>
+                  <span>Start</span>
+                  <span>End</span>
+                </div>
+
+                <div
+                  v-for="rate in supplier.supplierRates"
+                  :key="rate.id"
+                  class="rate-row"
+                >
+                  <span>{{ rate.rate }}</span>
+                  <span>{{ formatDate(rate.rateStartDate) }}</span>
+                  <span>{{ formatDate(rate.rateEndDate) }}</span>
+                </div>
+              </div>
+
+              <p v-else class="no-rates">No overlapping rates for this supplier.</p>
+            </article>
+          </div>
+        </section>
       </section>
     </section>
   </main>
