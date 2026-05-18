@@ -25,9 +25,9 @@ As the system scales, these architecture boundaries become more important. The D
 
 ## Scalability Risks
 
-The most important scaling risk is that the supplier read endpoints are unbounded. `GET /api/suppliers` returns every supplier and their rates, and the current query materialises the full result set into memory. At millions of rows, this would create large SQL queries, high memory pressure, long response times, and very large response payloads.
+The most important scaling risk is that the supplier read endpoints are unbounded. `GET /api/suppliers` returns every supplier and their rates, and the current query materialises the full result set into memory. At millions of rows, this would create large SQL queries, high memory pressure, long response times, very large response payloads, and a risk of process instability if a single request consumes too much memory.
 
-The overlap endpoint has a larger risk. It first loads supplier/rate projections and then performs overlap detection in application memory. The global overlap path compares rates pairwise, which becomes increasingly expensive as the number of rates grows. Even if the database can return the data, the application would struggle to process it within an interactive HTTP request.
+The overlap endpoint has a larger risk. It first loads supplier/rate projections and then performs overlap detection in application memory. The global overlap path compares rates pairwise, which becomes increasingly expensive as the number of rates grows. Even if the database can return the data, the application would struggle to process it within an interactive HTTP request. This endpoint is therefore a likely driver for memory right-sizing and horizontal scaling decisions.
 
 The database setup is also development-oriented. The Blazor home page uses `EnsureDeletedAsync` and `EnsureCreatedAsync` to initialise the schema, which is useful for local experimentation but not appropriate for production. A production system needs controlled migrations, repeatable deployment steps, and a rollback strategy.
 
@@ -99,6 +99,20 @@ For global overlap analysis, a precomputed or materialised overlap read model sh
 
 This design introduces eventual consistency: an overlap result may briefly lag behind the latest write. For most reporting or review workflows, that is usually acceptable if the UI communicates processing state. If immediate consistency is required for a specific command, that command should perform a bounded validation check inside the write transaction rather than depending on the asynchronous read model.
 
+### Runtime Sizing and Horizontal Scaling
+
+The application should be right-sized using measured workload data rather than an assumed VM or container size. The initial sizing exercise should load test the supplier and overlap endpoints with representative supplier/rate volumes, record CPU, memory, garbage collection, request latency, response size, database latency, and failure rates, then choose a baseline runtime size with enough headroom for normal peaks.
+
+If the application is hosted on VMs, the VM size should be selected for memory headroom first and CPU second, because the current high-risk paths are memory-heavy reads and in-memory overlap processing. VM Scale Sets or an equivalent autoscaling group should be used so additional instances can be added horizontally during demand spikes.
+
+If the application is containerised, the container should define explicit CPU and memory requests/limits. Memory limits should be high enough to avoid normal-request eviction, but low enough that a single instance cannot starve the host. The platform should scale the container deployment horizontally based on metrics such as request rate, CPU, memory pressure, queue depth for overlap jobs, and p95/p99 latency.
+
+The API should remain stateless so horizontal scaling is straightforward. Authentication keys, cache data, file storage, background job state, and database state must all live outside the individual application instance. This allows a load balancer or container orchestrator to replace instances safely and distribute requests across many replicas.
+
+The supplier and overlap workloads should not be scaled in exactly the same way. Interactive supplier reads should run on horizontally scaled API instances with bounded memory usage. Expensive global overlap analysis should move to separately scaled background workers, allowing the worker pool to scale by queue depth without consuming memory from the interactive API tier.
+
+Right-sizing should be revisited after every material architecture change. Pagination, database-backed overlap checks, distributed caching, and materialised read models should all reduce per-request memory requirements. Once those changes are in place, the preferred approach should be more small or medium stateless instances rather than a few very large instances, because that gives better availability and rolling deployment behaviour.
+
 ### Testing Strategy
 
 The existing component tests should remain the foundation for behavioural confidence. They should continue to verify supplier creation, update, deletion, supplier-rate operations, authentication requirements, and overlap rules against a real SQL Server-backed test environment.
@@ -109,7 +123,7 @@ As the architecture scales, the test strategy should become layered:
 - Application tests for command/query handlers, validation, pagination rules, asynchronous job submission, and read model policies.
 - Infrastructure integration tests for EF Core mappings, migrations, SQL queries, indexes, transaction behaviour, cache integration, queue integration, and read model updates.
 - API component tests for versioned contracts, authentication, ProblemDetails responses, bounded result sets, continuation tokens, and backwards-compatible response shapes.
-- Performance tests using representative data volumes to prove that supplier searches, rate lookups, and bounded overlap checks remain within target latency and resource limits.
+- Performance tests using representative data volumes to prove that supplier searches, rate lookups, and bounded overlap checks remain within target latency, CPU, memory, and response-size limits.
 - Resilience tests for database failover, read replica lag, cache unavailability, queue retries, duplicate messages, and background worker restarts.
 - End-to-end smoke tests for the most important user journeys through the WebApp and Vue client.
 
@@ -129,6 +143,8 @@ Deployments should use rolling or blue/green release patterns. Database migratio
 
 Observability should be treated as part of the architecture. The application should emit structured logs, metrics, traces, and business-level counters for supplier reads, rate writes, overlap processing, job latency, database latency, cache hit ratio, and failed authentication attempts. Alerts should focus on user impact, saturation, error rates, and data processing lag.
 
+Autoscaling rules should be based on a mix of resource and service-level metrics. CPU-only scaling is not enough for this application because the riskiest endpoints can be memory-bound. Memory utilisation, garbage collection pressure, p95/p99 latency, request queue length, database wait time, and overlap job queue depth should all be considered.
+
 The database platform should have automated backups, point-in-time restore, failover testing, and a documented disaster recovery plan. If the business requires multi-region availability, the design must define recovery time objective, recovery point objective, and whether the application can accept eventual consistency between regions.
 
 ## Challenges and Trade-offs
@@ -147,6 +163,8 @@ Sharding by supplier could eventually be required if a single database cannot ha
 
 Multi-region high availability gives resilience against regional failure, but it creates hard consistency and routing questions. Active-passive is simpler and safer for a write-heavy relational system. Active-active can reduce regional latency, but it requires conflict handling, careful data ownership rules, and a clear model for cross-region replication delay.
 
+Right-sizing has its own trade-off. Larger VMs or containers can absorb memory spikes from inefficient queries, but they increase cost and can hide design problems. Smaller horizontally scaled instances improve availability and deployment flexibility, but they require strict request bounds, stateless design, shared key storage, and reliable load balancing.
+
 ## Recommended Evolution Path
 
 The first step should be to make the current API safe under load: add versioned bounded contracts, cursor pagination, maximum page sizes, and database-backed filtering. At the same time, remove production reliance on `EnsureCreated` and introduce migrations.
@@ -155,10 +173,12 @@ The second step should be to preserve the Clean Architecture boundaries while st
 
 The third step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
 
-The fourth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
+The fourth step should be to right-size the runtime and define the horizontal scaling model. Use load test results to choose the initial VM or container size, set CPU and memory limits, define autoscaling metrics, and separate interactive API scaling from background overlap worker scaling.
 
-The fifth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+The fifth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
 
-The sixth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
+The sixth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+
+The seventh step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
 
 This path keeps the application recognisable while removing the specific assumptions that would fail at millions of suppliers and rates. It also lets the team scale in stages, measuring each change before accepting the additional complexity of the next one.
