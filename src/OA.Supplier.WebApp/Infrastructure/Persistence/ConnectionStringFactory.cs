@@ -14,7 +14,7 @@ public class DatabaseConnectionStringFactory : IDatabaseConnectionStringFactory
       TrustServerCertificate = true
     };
     
-    if (webHostEnvironment.IsDevelopment())
+    if (webHostEnvironment.IsDevelopment() && !sqlConnectionStringBuilder.IntegratedSecurity)
     {
       sqlConnectionStringBuilder.UserID = Environment.GetEnvironmentVariable("MSSQL_SA_ID");
       sqlConnectionStringBuilder.Password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
