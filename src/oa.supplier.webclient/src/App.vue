@@ -169,7 +169,7 @@ async function logIn() {
   }
 }
 
-async function fetchSuppliers() {
+function fetchSuppliers() {
   if (!accessToken.value) {
     supplierFetchState.value = "error";
     resetOverlaps();
@@ -183,20 +183,18 @@ async function fetchSuppliers() {
   resetOverlaps();
 
   try {
-    const response = await fetch("/api/suppliers/", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${accessToken.value}`
-      }
-    });
+    const request = new XMLHttpRequest();
+    request.open("GET", "/api/suppliers/", false);
+    request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("Authorization", `Bearer ${accessToken.value}`);
+    request.send();
 
-    if (!response.ok) {
+    if (request.status < 200 || request.status >= 300) {
       supplierFetchState.value = "error";
       return;
     }
 
-    const payload = (await response.json()) as ApiResponse<SupplierWithRates[]>;
+    const payload = JSON.parse(request.responseText) as ApiResponse<SupplierWithRates[]>;
     suppliers.value = payload.data ?? [];
     supplierFetchState.value = suppliers.value.length > 0 ? "success" : "empty";
   } catch {
