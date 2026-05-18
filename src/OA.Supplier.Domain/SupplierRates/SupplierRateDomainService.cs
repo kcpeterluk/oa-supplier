@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace OA.Supplier.Domain.SupplierRates;
 
 public interface ISupplierRateDomainService
@@ -11,28 +9,20 @@ public interface ISupplierRateDomainService
   Task<bool> DeleteSupplierRate(int id, CancellationToken cancellationToken = default);
 }
 
-public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRepository, ILogger<SupplierRateDomainService> logger) : ISupplierRateDomainService
+public class SupplierRateDomainService(IRepository<SupplierRate> supplierRateRepository) : ISupplierRateDomainService
 {
   public async Task<SupplierRate> CreateSupplierRate(CreateSupplierRateRequest request, CancellationToken cancellationToken = default)
   {
-    try
-    {
-      SupplierRate supplierRate = SupplierRate.Create(
-        request.SupplierId,
-        request.Rate,
-        request.RateStartDate,
-        request.RateEndDate,
-        request.CreatedByUser);
+    SupplierRate supplierRate = SupplierRate.Create(
+      request.SupplierId,
+      request.Rate,
+      request.RateStartDate,
+      request.RateEndDate,
+      request.CreatedByUser);
 
-      await supplierRateRepository.AddAsync(supplierRate, cancellationToken);
+    await supplierRateRepository.AddAsync(supplierRate, cancellationToken);
 
-      return supplierRate;
-    }
-    catch (Exception e)
-    {
-      logger.LogError(e, "Error creating supplier rate");
-      throw;
-    }
+    return supplierRate;
   }
 
   public async Task<bool> UpdateSupplierRate(UpdateSupplierRateRequest request, CancellationToken cancellationToken = default)

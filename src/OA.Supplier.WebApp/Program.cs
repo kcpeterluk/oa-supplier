@@ -1,10 +1,6 @@
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
 using OA.Supplier.Application;
-using OA.Supplier.Domain;
 using OA.Supplier.Infrastructure;
 using OA.Supplier.Infrastructure.Persistence;
-using OA.Supplier.WebApp;
 using OA.Supplier.WebApp.Apis.Suppliers;
 using OA.Supplier.WebApp.Components;
 using OA.Supplier.WebApp.Components.Account;

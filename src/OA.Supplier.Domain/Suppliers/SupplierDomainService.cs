@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace OA.Supplier.Domain.Suppliers;
 
 public interface ISupplierDomainService
@@ -11,23 +9,13 @@ public interface ISupplierDomainService
   Task<bool> DeleteSupplier(int id, CancellationToken cancellationToken = default);
 }
 
-public class SupplierDomainService(IRepository<Supplier> supplierRepository, ILogger<SupplierDomainService> logger) : ISupplierDomainService
+public class SupplierDomainService(IRepository<Supplier> supplierRepository) : ISupplierDomainService
 {
   public async Task<Supplier> CreateSupplier(CreateSupplierRequest request, CancellationToken cancellationToken = default)
   {
-    try
-    {
-      Supplier newSupplier = Supplier.Create(request.Name, request.Address, request.CreatedByUser);
-    
-      await supplierRepository.AddAsync(newSupplier, cancellationToken);
-
-      return newSupplier;
-    }
-    catch (Exception e)
-    {
-      logger.LogError(e, "Error creating supplier");
-      throw;
-    }
+    Supplier newSupplier = Supplier.Create(request.Name, request.Address, request.CreatedByUser);
+    await supplierRepository.AddAsync(newSupplier, cancellationToken);
+    return newSupplier;
   }
 
   public async Task<bool> UpdateSupplier(UpdateSupplierRequest request, CancellationToken cancellationToken = default)
