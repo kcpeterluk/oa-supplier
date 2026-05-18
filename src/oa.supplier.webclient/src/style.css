@@ -35,7 +35,7 @@ select {
 }
 
 .intro {
-  width: min(100%, 440px);
+  width: min(100%, 760px);
 }
 
 .eyebrow {
@@ -55,7 +55,9 @@ h1 {
 
 .login-form {
   display: grid;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
   margin-top: 32px;
 }
 
@@ -91,6 +93,8 @@ button {
   color: #ffffff;
   cursor: pointer;
   font-weight: 750;
+  padding: 0 24px;
+  white-space: nowrap;
 }
 
 button:hover:not(:disabled) {
@@ -104,6 +108,7 @@ input:disabled {
 }
 
 .login-message {
+  grid-column: 1 / -1;
   margin: 0;
   border-radius: 8px;
   padding: 12px 14px;
@@ -126,4 +131,18 @@ input:disabled {
   color: #526173;
   font-size: 1.125rem;
   line-height: 1.6;
+}
+
+@media (max-width: 680px) {
+  .intro {
+    width: min(100%, 440px);
+  }
+
+  .login-form {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    width: 100%;
+  }
 }
