@@ -11,6 +11,8 @@ The supplier and rate data is stored in SQL Server using `SupplierDbContext`. Id
 
 The current solution also includes component tests under `tests/OA.Supplier.ComponentTests`. These tests use `Microsoft.AspNetCore.Mvc.Testing`, TUnit, and Testcontainers for SQL Server, which means core supplier and supplier-rate behaviours are exercised against a realistic ASP.NET Core host and database rather than only against mocked infrastructure.
 
+The current web app has basic ASP.NET Core logging configuration, but it does not yet show a dedicated monitoring or application performance management setup. There is no Application Insights, Azure Monitor, AWS CloudWatch, OpenTelemetry, distributed tracing, metrics dashboard, or alerting configuration in the current design.
+
 This is a sensible design for a small or moderate workload because it is simple, easy to understand, and keeps business rules away from the HTTP endpoint layer. However, the current implementation assumes that the full supplier/rate data set can be loaded and processed within a single request. That assumption would not hold if the platform needed to support millions of suppliers, millions of rates, and high availability as a critical requirement.
 
 ## Architectural Style
@@ -34,6 +36,8 @@ The database setup is also development-oriented. The Blazor home page uses `Ensu
 High availability is not yet addressed in the application architecture. The current design depends on a single configured SQL Server connection, has no visible health checks, does not show persistent Data Protection key storage for multi-instance hosting, and has no explicit strategy for read replicas, failover, disaster recovery, or multi-region operation.
 
 The current test coverage is useful for behaviour and integration confidence, but it is not yet enough for the proposed scale target. It does not currently prove pagination safety, large-data query performance, overlap processing at volume, concurrency behaviour, failover handling, cache invalidation, or background processing reliability.
+
+The lack of production monitoring is also a scaling risk. Without structured telemetry, the team would not have enough visibility into slow supplier queries, memory spikes from overlap processing, database saturation, cache misses, failed background jobs, authentication failures, or customer-impacting latency. This would make capacity planning, incident response, and right-sizing largely reactive.
 
 ## Proposed Architecture Changes
 
@@ -145,6 +149,20 @@ Testing should also protect the Clean Architecture boundaries. Domain tests shou
 
 For high availability, tests should include operational acceptance criteria rather than only functional assertions. Health checks, readiness behaviour, migration safety, backup/restore drills, and deployment compatibility should be verified before production release.
 
+### Monitoring and Observability
+
+The web app should be instrumented with a production monitoring platform before it is scaled. In Azure, this would normally mean Application Insights with Azure Monitor. In AWS, an equivalent design would use CloudWatch, X-Ray, and managed log/metric dashboards. OpenTelemetry is a good neutral instrumentation approach if the team wants portability between providers.
+
+Monitoring should capture logs, metrics, traces, dependencies, exceptions, and business events. The most important telemetry should include supplier API latency, overlap API latency, memory usage, garbage collection pressure, SQL query duration, SQL connection pool behaviour, cache hit ratio, background job queue depth, overlap processing duration, failed job count, authentication failures, rate-limit rejections, and HTTP status code distribution.
+
+Distributed tracing should connect the API gateway, web app, database calls, cache calls, queue publishing, function execution, and background workers. This is especially important if the supplier API, overlap API, and overlap workers are split into separate deployables, because failures will otherwise be spread across multiple services.
+
+Dashboards should separate operational and product views. Operational dashboards should show availability, latency, error rate, saturation, memory pressure, dependency health, and queue lag. Product or business dashboards should show supplier read volume, overlap job submissions, overlap job completion rate, and unusual spikes in supplier/rate activity.
+
+Alerts should be actionable and tied to user impact. Useful alert examples include sustained p95/p99 latency breaches, high memory utilisation, repeated out-of-memory restarts, SQL timeout spikes, low cache hit ratio, growing overlap queue depth, failed overlap jobs, high 5xx rate, unexpected 401/403 spikes, readiness check failures, and rate-limit exhaustion.
+
+The monitoring design should avoid leaking sensitive data. Supplier names, addresses, bearer tokens, credentials, and personally identifiable information should not be written into logs, traces, or custom dimensions unless explicitly approved and protected.
+
 ### High Availability and Operations
 
 The web application should run as stateless instances behind a load balancer. Any instance should be replaceable without losing user state. ASP.NET Core Data Protection keys must be persisted to shared durable storage so authentication cookies and tokens remain valid across instances and deployments.
@@ -157,7 +175,7 @@ Secrets and configuration should be centralised in a managed secret store rather
 
 Deployments should use rolling or blue/green release patterns. Database migrations should be backward-compatible wherever possible so old and new application versions can run during a deployment window. Long-running migrations and large index builds need a planned rollout to avoid blocking production traffic.
 
-Observability should be treated as part of the architecture. The application should emit structured logs, metrics, traces, and business-level counters for supplier reads, rate writes, overlap processing, job latency, database latency, cache hit ratio, and failed authentication attempts. Alerts should focus on user impact, saturation, error rates, and data processing lag.
+Observability should be treated as part of the architecture, not as a later add-on. Monitoring data should feed incident response, capacity planning, autoscaling decisions, deployment validation, and disaster recovery exercises.
 
 Autoscaling rules should be based on a mix of resource and service-level metrics. CPU-only scaling is not enough for this application because the riskiest endpoints can be memory-bound. Memory utilisation, garbage collection pressure, p95/p99 latency, request queue length, database wait time, and overlap job queue depth should all be considered.
 
@@ -183,24 +201,28 @@ Right-sizing has its own trade-off. Larger VMs or containers can absorb memory s
 
 Splitting the supplier and overlap APIs introduces operational overhead. Separate web apps, containers, function apps, and API gateway routes can scale independently, but they also require more deployment pipelines, configuration, monitoring, security policy, and contract management. Serverless hosting can be cost-effective for bursty overlap processing, but synchronous data-heavy functions may face cold starts, execution time limits, connection management issues, and more complex local testing.
 
+Monitoring introduces cost and data-governance trade-offs. High-cardinality metrics, verbose traces, and detailed logs can become expensive at scale, while under-sampling can hide production issues. The system needs explicit retention, sampling, redaction, and alerting rules so telemetry remains useful without exposing sensitive data or overwhelming the team.
+
 ## Recommended Evolution Path
 
 The first step should be to make the current API safe under load: add versioned bounded contracts, cursor pagination, maximum page sizes, and database-backed filtering. At the same time, remove production reliance on `EnsureCreated` and introduce migrations.
 
 The second step should be to introduce API Management or an equivalent gateway for rate limiting, quotas, API version routing, request-size controls, and centralised request telemetry.
 
-The third step should be to preserve the Clean Architecture boundaries while strengthening the DDD model where the business rules justify it. Keep the Domain project focused on supplier/rate behaviour, keep workflow decisions in Application handlers, and keep EF Core, cache, queue, and hosting details in Infrastructure or WebApp.
+The third step should be to add production monitoring through Application Insights/Azure Monitor, AWS CloudWatch/X-Ray, or an OpenTelemetry-based equivalent. Capture logs, metrics, traces, dependency telemetry, dashboards, and actionable alerts before relying on horizontal scaling.
 
-The fourth step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
+The fourth step should be to preserve the Clean Architecture boundaries while strengthening the DDD model where the business rules justify it. Keep the Domain project focused on supplier/rate behaviour, keep workflow decisions in Application handlers, and keep EF Core, cache, queue, and hosting details in Infrastructure or WebApp.
 
-The fifth step should be to right-size the runtime and define the horizontal scaling model. Use load test results to choose the initial VM or container size, set CPU and memory limits, define autoscaling metrics, and separate interactive API scaling from background overlap worker scaling.
+The fifth step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
 
-The sixth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
+The sixth step should be to right-size the runtime and define the horizontal scaling model. Use load test results to choose the initial VM or container size, set CPU and memory limits, define autoscaling metrics, and separate interactive API scaling from background overlap worker scaling.
 
-The seventh step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+The seventh step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
 
-The eighth step should be to consider separating the supplier API, overlap API, and overlap workers into independently deployed web apps, containers, Azure Functions, AWS Lambda functions, or equivalent services if load testing shows meaningfully different scaling needs.
+The eighth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
 
-The ninth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
+The ninth step should be to consider separating the supplier API, overlap API, and overlap workers into independently deployed web apps, containers, Azure Functions, AWS Lambda functions, or equivalent services if load testing shows meaningfully different scaling needs.
+
+The tenth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
 
 This path keeps the application recognisable while removing the specific assumptions that would fail at millions of suppliers and rates. It also lets the team scale in stages, measuring each change before accepting the additional complexity of the next one.
