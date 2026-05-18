@@ -9,6 +9,8 @@ OA Supplier is currently a .NET 10 ASP.NET Core application with a Blazor Server
 
 The supplier and rate data is stored in SQL Server using `SupplierDbContext`. Identity data is stored through `ApplicationIdentityDbContext`, also backed by SQL Server. The application code is organised around Clean Architecture boundaries, with domain concepts in the Domain project, use case orchestration in the Application project, EF Core persistence in the Infrastructure project, and API/UI composition in the WebApp project.
 
+The current solution also includes component tests under `tests/OA.Supplier.ComponentTests`. These tests use `Microsoft.AspNetCore.Mvc.Testing`, TUnit, and Testcontainers for SQL Server, which means core supplier and supplier-rate behaviours are exercised against a realistic ASP.NET Core host and database rather than only against mocked infrastructure.
+
 This is a sensible design for a small or moderate workload because it is simple, easy to understand, and keeps business rules away from the HTTP endpoint layer. However, the current implementation assumes that the full supplier/rate data set can be loaded and processed within a single request. That assumption would not hold if the platform needed to support millions of suppliers, millions of rates, and high availability as a critical requirement.
 
 ## Architectural Style
@@ -30,6 +32,8 @@ The overlap endpoint has a larger risk. It first loads supplier/rate projections
 The database setup is also development-oriented. The Blazor home page uses `EnsureDeletedAsync` and `EnsureCreatedAsync` to initialise the schema, which is useful for local experimentation but not appropriate for production. A production system needs controlled migrations, repeatable deployment steps, and a rollback strategy.
 
 High availability is not yet addressed in the application architecture. The current design depends on a single configured SQL Server connection, has no visible health checks, does not show persistent Data Protection key storage for multi-instance hosting, and has no explicit strategy for read replicas, failover, disaster recovery, or multi-region operation.
+
+The current test coverage is useful for behaviour and integration confidence, but it is not yet enough for the proposed scale target. It does not currently prove pagination safety, large-data query performance, overlap processing at volume, concurrency behaviour, failover handling, cache invalidation, or background processing reliability.
 
 ## Proposed Architecture Changes
 
@@ -95,6 +99,24 @@ For global overlap analysis, a precomputed or materialised overlap read model sh
 
 This design introduces eventual consistency: an overlap result may briefly lag behind the latest write. For most reporting or review workflows, that is usually acceptable if the UI communicates processing state. If immediate consistency is required for a specific command, that command should perform a bounded validation check inside the write transaction rather than depending on the asynchronous read model.
 
+### Testing Strategy
+
+The existing component tests should remain the foundation for behavioural confidence. They should continue to verify supplier creation, update, deletion, supplier-rate operations, authentication requirements, and overlap rules against a real SQL Server-backed test environment.
+
+As the architecture scales, the test strategy should become layered:
+
+- Domain tests for supplier, supplier-rate, date-range, and overlap invariants without database or web dependencies.
+- Application tests for command/query handlers, validation, pagination rules, asynchronous job submission, and read model policies.
+- Infrastructure integration tests for EF Core mappings, migrations, SQL queries, indexes, transaction behaviour, cache integration, queue integration, and read model updates.
+- API component tests for versioned contracts, authentication, ProblemDetails responses, bounded result sets, continuation tokens, and backwards-compatible response shapes.
+- Performance tests using representative data volumes to prove that supplier searches, rate lookups, and bounded overlap checks remain within target latency and resource limits.
+- Resilience tests for database failover, read replica lag, cache unavailability, queue retries, duplicate messages, and background worker restarts.
+- End-to-end smoke tests for the most important user journeys through the WebApp and Vue client.
+
+Testing should also protect the Clean Architecture boundaries. Domain tests should not require ASP.NET Core, EF Core, SQL Server, or cache dependencies. Infrastructure tests may use containers and real integrations, but Application and Domain tests should stay fast enough to run frequently.
+
+For high availability, tests should include operational acceptance criteria rather than only functional assertions. Health checks, readiness behaviour, migration safety, backup/restore drills, and deployment compatibility should be verified before production release.
+
 ### High Availability and Operations
 
 The web application should run as stateless instances behind a load balancer. Any instance should be replaceable without losing user state. ASP.NET Core Data Protection keys must be persisted to shared durable storage so authentication cookies and tokens remain valid across instances and deployments.
@@ -131,10 +153,12 @@ The first step should be to make the current API safe under load: add versioned 
 
 The second step should be to preserve the Clean Architecture boundaries while strengthening the DDD model where the business rules justify it. Keep the Domain project focused on supplier/rate behaviour, keep workflow decisions in Application handlers, and keep EF Core, cache, queue, and hosting details in Infrastructure or WebApp.
 
-The third step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
+The third step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
 
-The fourth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+The fourth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
 
-The fifth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
+The fifth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+
+The sixth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
 
 This path keeps the application recognisable while removing the specific assumptions that would fail at millions of suppliers and rates. It also lets the team scale in stages, measuring each change before accepting the additional complexity of the next one.
