@@ -65,6 +65,12 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Frontend
+node_modules/
+dist/
+*.local
+.vite/
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
