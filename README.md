@@ -58,7 +58,7 @@ Start a local SQL Server container:
 docker run \
   --name oa-supplier-sql \
   --env ACCEPT_EULA=Y \
-  --env MSSQL_SA_PASSWORD='v1sp15Lx@b=Eqe2unaml' \
+  --env MSSQL_SA_PASSWORD='<your password>' \
   --publish 55001:1433 \
   --detach \
   mcr.microsoft.com/mssql/server:2025-latest
