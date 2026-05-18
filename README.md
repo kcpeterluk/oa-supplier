@@ -55,11 +55,11 @@ The development backend configuration expects SQL Server on port `55001`.
 If the effective `SupplierDbContext` connection string from `src/OA.Supplier.WebApp/appsettings.json` or `src/OA.Supplier.WebApp/appsettings.Development.json` does not set `Integrated Security=true`, the app reads SQL Server credentials from environment variables during development:
 
 ```bash
-export MSSQL_SA_ID='sa'
-export MSSQL_SA_PASSWORD='<your password>'
+export MSSQL_SA_ID='<your SQL Server user>'
+export MSSQL_SA_PASSWORD='<your SQL Server password>'
 ```
 
-The `MSSQL_SA_PASSWORD` value must match the password configured for the local SQL Server instance. The checked-in launch profiles in `src/OA.Supplier.WebApp/Properties/launchSettings.json` can also provide these variables when running with a launch profile.
+The `MSSQL_SA_PASSWORD` value must match the password configured for the local SQL Server instance.
 
 Start a local SQL Server container:
 
@@ -80,6 +80,42 @@ docker start oa-supplier-sql
 ```
 
 After the backend is running, open the Blazor home page and use the `Initialise Database` button to create the local database schema.
+
+### Configure launch settings
+
+`src/OA.Supplier.WebApp/Properties/launchSettings.json` is ignored by Git because it can contain local ports and environment variables. Create this file locally if you want to run the backend with `--launch-profile http` or from an IDE.
+
+Use placeholders for any values that are specific to your machine. Only include `MSSQL_SA_ID` and `MSSQL_SA_PASSWORD` when the effective connection string does not use `Integrated Security=true`.
+
+```json
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5215",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MSSQL_SA_ID": "<your SQL Server user>",
+        "MSSQL_SA_PASSWORD": "<your SQL Server password>"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7177;http://localhost:5215",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MSSQL_SA_ID": "<your SQL Server user>",
+        "MSSQL_SA_PASSWORD": "<your SQL Server password>"
+      }
+    }
+  }
+}
+```
 
 ## Run the Applications
 
