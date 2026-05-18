@@ -50,7 +50,16 @@ npm ci --prefix src/oa.supplier.webclient
 
 ### Start SQL Server
 
-The development backend configuration expects SQL Server on port `55001`, using the credentials from `src/OA.Supplier.WebApp/Properties/launchSettings.json`.
+The development backend configuration expects SQL Server on port `55001`.
+
+If the effective `SupplierDbContext` connection string from `src/OA.Supplier.WebApp/appsettings.json` or `src/OA.Supplier.WebApp/appsettings.Development.json` does not set `Integrated Security=true`, the app reads SQL Server credentials from environment variables during development:
+
+```bash
+export MSSQL_SA_ID='sa'
+export MSSQL_SA_PASSWORD='<your password>'
+```
+
+The `MSSQL_SA_PASSWORD` value must match the password configured for the local SQL Server instance. The checked-in launch profiles in `src/OA.Supplier.WebApp/Properties/launchSettings.json` can also provide these variables when running with a launch profile.
 
 Start a local SQL Server container:
 
@@ -58,7 +67,7 @@ Start a local SQL Server container:
 docker run \
   --name oa-supplier-sql \
   --env ACCEPT_EULA=Y \
-  --env MSSQL_SA_PASSWORD='<your password>' \
+  --env MSSQL_SA_PASSWORD="${MSSQL_SA_PASSWORD}" \
   --publish 55001:1433 \
   --detach \
   mcr.microsoft.com/mssql/server:2025-latest
