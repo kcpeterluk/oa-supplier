@@ -62,6 +62,18 @@ The overlap endpoint should be split by use case. A bounded request, such as che
 
 The API layer should also add request timeouts, rate limiting, consistent ProblemDetails responses, and OpenAPI documentation for the bounded contracts. These changes make failure behaviour more predictable and reduce the chance of one expensive request affecting the whole system.
 
+### API Decomposition and Edge Management
+
+The supplier and overlap APIs do not have to remain in the same deployable application forever. The initial design can keep them together while the system is small, but the architecture should allow them to be separated once their scaling profiles diverge.
+
+The supplier read API is likely to be a good fit for a stateless ASP.NET Core API hosted as a web app, container app, or VM-backed service. It should scale horizontally behind a load balancer and use bounded queries, pagination, read replicas, and caching to control memory and database load.
+
+The overlap capability is more likely to need a separate scaling model. Small, bounded overlap checks can stay in a synchronous API. Expensive global overlap analysis should be moved behind a separate overlap API, queue-backed worker, Azure Function, AWS Lambda, or equivalent serverless component. A function app is especially useful for bursty or asynchronous work where queue depth can drive scale-out independently from the interactive API tier.
+
+API Management should sit in front of the public HTTP surface. Azure API Management, AWS API Gateway, or an equivalent gateway can enforce request rate limits, quotas, authentication policies, version routing, request/response size limits, and centralised API observability. This supports horizontal scaling by protecting the backing services from unbounded traffic and by applying consistent policy before requests reach the application instances.
+
+This edge layer should not be treated as a substitute for fixing the underlying workload. API Management can throttle, reject, route, and observe requests, but it cannot make an unbounded query safe. The service still needs pagination, bounded contracts, right-sized compute, database-backed overlap checks, and asynchronous processing for large workloads.
+
 ### Data Storage
 
 SQL Server can still be a good primary store, but it should be operated as a managed, highly available database platform rather than a single manually managed instance. Azure SQL Database, Azure SQL Managed Instance, or a highly available SQL Server deployment would be appropriate depending on operational constraints.
@@ -111,6 +123,8 @@ The API should remain stateless so horizontal scaling is straightforward. Authen
 
 The supplier and overlap workloads should not be scaled in exactly the same way. Interactive supplier reads should run on horizontally scaled API instances with bounded memory usage. Expensive global overlap analysis should move to separately scaled background workers, allowing the worker pool to scale by queue depth without consuming memory from the interactive API tier.
 
+If the overlap capability is extracted into a separate API or serverless function, it should have its own runtime sizing, autoscaling rules, deployment pipeline, health checks, and operational alerts. The supplier API should not be scaled up merely to compensate for memory-heavy overlap processing.
+
 Right-sizing should be revisited after every material architecture change. Pagination, database-backed overlap checks, distributed caching, and materialised read models should all reduce per-request memory requirements. Once those changes are in place, the preferred approach should be more small or medium stateless instances rather than a few very large instances, because that gives better availability and rolling deployment behaviour.
 
 ### Testing Strategy
@@ -136,6 +150,8 @@ For high availability, tests should include operational acceptance criteria rath
 The web application should run as stateless instances behind a load balancer. Any instance should be replaceable without losing user state. ASP.NET Core Data Protection keys must be persisted to shared durable storage so authentication cookies and tokens remain valid across instances and deployments.
 
 The platform should add health checks with separate liveness and readiness endpoints. Readiness should check critical dependencies such as SQL Server and the distributed cache. Liveness should stay lightweight so the hosting platform can detect failed processes without taking healthy-but-degraded instances out unnecessarily.
+
+An API gateway or API Management layer should be part of the production edge. It should enforce rate limits and quotas before requests reach the application, route API versions deliberately, and provide a single place for request-level telemetry. This is particularly important if supplier reads, overlap requests, and asynchronous job submission are split across multiple web apps, containers, or function apps.
 
 Secrets and configuration should be centralised in a managed secret store rather than environment variables spread across hosts. Database credentials, signing keys, and connection strings should be rotated safely.
 
@@ -165,20 +181,26 @@ Multi-region high availability gives resilience against regional failure, but it
 
 Right-sizing has its own trade-off. Larger VMs or containers can absorb memory spikes from inefficient queries, but they increase cost and can hide design problems. Smaller horizontally scaled instances improve availability and deployment flexibility, but they require strict request bounds, stateless design, shared key storage, and reliable load balancing.
 
+Splitting the supplier and overlap APIs introduces operational overhead. Separate web apps, containers, function apps, and API gateway routes can scale independently, but they also require more deployment pipelines, configuration, monitoring, security policy, and contract management. Serverless hosting can be cost-effective for bursty overlap processing, but synchronous data-heavy functions may face cold starts, execution time limits, connection management issues, and more complex local testing.
+
 ## Recommended Evolution Path
 
 The first step should be to make the current API safe under load: add versioned bounded contracts, cursor pagination, maximum page sizes, and database-backed filtering. At the same time, remove production reliance on `EnsureCreated` and introduce migrations.
 
-The second step should be to preserve the Clean Architecture boundaries while strengthening the DDD model where the business rules justify it. Keep the Domain project focused on supplier/rate behaviour, keep workflow decisions in Application handlers, and keep EF Core, cache, queue, and hosting details in Infrastructure or WebApp.
+The second step should be to introduce API Management or an equivalent gateway for rate limiting, quotas, API version routing, request-size controls, and centralised request telemetry.
 
-The third step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
+The third step should be to preserve the Clean Architecture boundaries while strengthening the DDD model where the business rules justify it. Keep the Domain project focused on supplier/rate behaviour, keep workflow decisions in Application handlers, and keep EF Core, cache, queue, and hosting details in Infrastructure or WebApp.
 
-The fourth step should be to right-size the runtime and define the horizontal scaling model. Use load test results to choose the initial VM or container size, set CPU and memory limits, define autoscaling metrics, and separate interactive API scaling from background overlap worker scaling.
+The fourth step should be to strengthen the test suite around the scaled design. Add domain and application tests for business rules and bounded contracts, keep component tests for API confidence, and introduce performance and resilience tests before relying on caches, read replicas, queues, or materialised read models.
 
-The fifth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
+The fifth step should be to right-size the runtime and define the horizontal scaling model. Use load test results to choose the initial VM or container size, set CPU and memory limits, define autoscaling metrics, and separate interactive API scaling from background overlap worker scaling.
 
-The sixth step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+The sixth step should be to optimise the database around real query patterns. Add measured indexes, inspect query plans, and introduce partitioning or archival once data growth justifies it.
 
-The seventh step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
+The seventh step should be to redesign overlap analysis. Keep small supplier-specific overlap checks synchronous and database-backed. Move global overlap detection into asynchronous processing with a materialised read model.
+
+The eighth step should be to consider separating the supplier API, overlap API, and overlap workers into independently deployed web apps, containers, Azure Functions, AWS Lambda functions, or equivalent services if load testing shows meaningfully different scaling needs.
+
+The ninth step should be to harden the platform for high availability: stateless application instances, shared Data Protection keys, health checks, centralised secrets, managed database failover, read replicas, distributed caching, structured observability, backups, and tested disaster recovery.
 
 This path keeps the application recognisable while removing the specific assumptions that would fail at millions of suppliers and rates. It also lets the team scale in stages, measuring each change before accepting the additional complexity of the next one.
